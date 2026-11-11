@@ -1,11 +1,10 @@
 # RDK X5 × fnOS
 
-RDK X5 的 fnOS ARM 完整系统镜像与适配源码。首发 **v0.1.0 家庭共享版**，镜像基线为 product-r14，Linux 6.18.0。
+RDK X5 的 fnOS ARM 适配项目。**v0.2.0** 发布 U 盘 Basic 存储创建修复、对应的 Linux 6.18 内核源码、配置和补丁。
 
 [下载与安装](#下载与安装) · [使用帮助](#日常使用与常见问题) · [验证范围](#已验证功能) · [开发计划](TODO.md) · [许可](THIRD_PARTY.md)
 
-> **当前版本：v0.1.0（product-r14）**，适用于 RDK X5、SD 卡启动、家庭共享场景。
-> **待修复反馈：其他板卡首次创建 USB 存储空间失败。** 已定位为内核缺少 CONFIG_MD_LLBITMAP；候选内核在替换板上通过原生 Btrfs/ext4 创建，120 GB 新建卷通过普通用户 1 GiB 读写校验。16 GB 盘随后在原生检测中掉线，USB 稳定性和完整镜像回归仍未通过。修复镜像尚未发布，进度见 [TODO](TODO.md)。
+> **v0.2.0 源码发布。** Linux 6.18.0 #5 在真板通过 120 GB U 盘的 Basic/Btrfs 创建、读写及冷启动复挂。全新 r16 系统的新建卷和双盘 ext4 RAID1 仍待实测。见 [发布说明](RELEASE_NOTES.md) 和 [真板结果](TESTED.md)。
 
 ## 你能用它做什么
 
@@ -21,11 +20,9 @@ RDK X5 的 fnOS ARM 完整系统镜像与适配源码。首发 **v0.1.0 家庭�
 
 ## 下载与安装
 
-国内镜像入口：[百度网盘](https://pan.baidu.com/s/1Ph0KkHu1LZne7GW20L4DgA?pwd=s2ev)，提取码 `s2ev`。完整镜像的再分发授权状态见 [第三方许可说明](THIRD_PARTY.md)，本项目许可证不授予飞牛软件的分发权。
+从 [v0.2.0 Release](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.2.0) 下载适配源码、对应内核源码归档和 `SHA256SUMS`。完整系统需使用依法取得的 fnOS ARM 用户态与厂商运行库，在自己的构建环境组装。构建入口和内核命令见 [发布说明](RELEASE_NOTES.md)。
 
-从 [Releases](https://github.com/xuguosheng110/rdk-x5-fnos/releases/latest) 获取百度网盘下载入口。网盘提供完整镜像 `rdk-x5-fnos-v0.1.0.img.xz`，无需合并分卷；先核对本目录 SHA256SUMS，再解压烧录。
-
-首发镜像使用国内百度网盘分发，GitHub 提供适配源码、版本说明与校验资料。仓库中的 `merge-image.py` / `parts.json` 是备用分卷工具，首发不依赖它们，不要使用其下载模式。
+历史镜像与对应校验值见 [v0.1.0 Release](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.1.0)。仓库中的 `merge-image.py` 和 `parts.json` 对应该历史版本。完整镜像所含第三方组件见 [许可说明](THIRD_PARTY.md)。
 
 解压 XZ 后得到整盘 `.img`，使用整盘镜像烧录工具写入系统 SD 卡。RDK X5 已有 U-Boot 时，可经串口使用 `ums 0 mmc 1` 映射 SD 卡到电脑；核对目标确为板卡 SD，再写入。不要把系统镜像写入数据盘。`ums 0 mmc 0` 对应 eMMC，不是本版本已验证的 SD 部署目标。
 
@@ -46,6 +43,8 @@ RDK X5 的 fnOS ARM 完整系统镜像与适配源码。首发 **v0.1.0 家庭�
 **找不到 IP？** 先用有线网络检查路由器 DHCP 列表；不同板卡和重装后的地址可能不同，不要照搬开发机地址。
 
 ## 已验证功能
+
+以下功能结果来自 v0.1.0 的真板验收。v0.2.0 存储更新的结果见 [TESTED.md](TESTED.md)。
 
 - 完整镜像烧录与全量回读 SHA256 一致；受控断电冷启动。
 - 有线 Web/SMB、Wi-Fi 配置及冷启动自动重连。
@@ -85,7 +84,7 @@ RDK X5 的 fnOS ARM 完整系统镜像与适配源码。首发 **v0.1.0 家庭�
 | [Linux 6.18 上游源码](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tag/?h=v6.18) | 内核基线参考；不包含本项目所有 X5 BSP 改动 |
 | [ophub/fnnas](https://github.com/ophub/fnnas) | 第三方 ARM NAS 适配参考，非飞牛官方发布 |
 
-X5 专用 6.18 适配仓库的公开 URL 与本镜像对应提交尚待核实；不能把上游 Linux 或官方 `x5-rdk-gen` 当作本镜像完整内核源码。补齐精确提交、补丁、配置和构建说明列为发布待办。
+v0.2.0 Release 附件提供 r16 实际构建使用的 X5 内核源码快照、配置和编译器版本。该快照的校验值见 `SHA256SUMS`，上游 BSP 的精确提交对应关系仍待核实。
 
 ## 参与开发与许可
 

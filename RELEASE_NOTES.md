@@ -1,17 +1,36 @@
-# v0.1.0 — RDK X5 fnOS 家庭共享版
+# v0.2.0 — RDK X5 U 盘 Basic 存储修复
 
-首个公开 Release，基于已完成真板验证的 product-r14 完整系统镜像。无需手工安装存储、转码或 BPU 相册补丁；按原生界面完成首次账号和存储初始化即可使用。
+这一版修复了部分 RDK X5 上在飞牛界面创建 Basic 存储空间时的失败。GitHub 提供 X5 适配源码、Linux 6.18 内核源码和构建配置、修复补丁与校验文件。
 
-包含原生 H264/HEVC 硬件编解码、官方 BPU 人脸检测/识别、Wi-Fi、家庭共享存储及 WebDAV 持久缓存。烧录完整回读、冷启动、原生备份、应用升级及跨 UID 容器读写已验证。
+## 更新
 
-## 下载
+- Linux 6.18.0 #5 启用 `CONFIG_MD_LLBITMAP=y`，让飞牛原生 `mdadm` 可以为 Basic 卷设置 lockless bitmap。
+- 回移上游 llbitmap 超时恢复补丁，等待超时后恢复内核引用计数。组装器会检查必需的 MD、RAID1 和 llbitmap 配置。
+- r16 沿用 v0.1.0 的应用和运行时构建输入。该版本的变化集中在存储内核及组装校验。
 
-完整镜像、源码 ZIP、系统适配及烧录说明在百度网盘提供；国内下载无需分卷合并。下载入口见本项目 GitHub Release 页面。
+## 验证范围
 
-GitHub 提供源码和版本校验资料。下载镜像后按 SHA256SUMS 核验，再解压 XZ 并写入系统 SD 卡。
+- 同一 #5 内核在真板通过 120 GB U 盘的原生 Basic/Btrfs 创建。128 MiB 测试文件写入回读成功，冷启动自动挂载后 SHA-256 一致。
+- r16 完整 SD 镜像通过写入、全量回读、首启、首次设置和已有 Basic 卷导入。同一 #5 内核的冷启动测试也验证了 2 TB 外置 ext4 盘的复挂和只读抽样。
+- 公开源码回归 162 项通过、1 项跳过，组装回归 10 项通过。超时恢复用例验证了模拟超时和正常完成两条分支。
 
-## 已知限制
+全新 r16 镜像上的新建卷、双盘 ext4 RAID1 和真实超时故障注入待实测。早期 16 GB U 盘的掉线原因仍待定位。家庭共享权限提示及 v0.1.0 的应用兼容范围见 [真板测试记录](https://github.com/xuguosheng110/rdk-x5-fnos/blob/v0.2.0/TESTED.md)。
 
-家庭共享不实现逐用户 Windows ACL v2 隔离，保留“权限未适配”提示，请勿执行该转换。独立外接 U 盘未验收，尚待实物补测。缩放和中文语义搜索仍为 CPU；10-bit/HDR 等输入的软件回退保留。系统通用自动升级已禁用以保护 X5 启动链。不是官方厂商发行版。
+## 下载与构建
 
-详见 README、TESTED.md、release.json 和校验文件。
+在 [v0.2.0 Release](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.2.0) 下载 `rdk-x5-fnos-v0.2.0-source.zip`、`rdk-x5-linux-6.18-storage-r16-source.tar.gz` 和 `SHA256SUMS`。附件为源码与构建材料。完整系统组装需要依法取得的 fnOS ARM 用户态及对应厂商运行库。
+
+将下载文件放在同一目录后核对校验值。内核归档中的 `kernel-build-reference/` 包含实际构建配置、编译器版本和产物哈希。源码已经包含超时恢复补丁。
+
+```sh
+sha256sum -c SHA256SUMS
+tar -xzf rdk-x5-linux-6.18-storage-r16-source.tar.gz
+src="$PWD/fnos-storage-timeoutfix-20261111"
+out="$PWD/kernel-build"
+mkdir -p "$out"
+cp kernel-build-reference/config-6.18.0 "$out/.config"
+make -C "$src" O="$out" ARCH=arm64 LLVM=1 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
+make -C "$src" O="$out" ARCH=arm64 LLVM=1 CROSS_COMPILE=aarch64-linux-gnu- -j"$(nproc)" Image dtbs modules
+```
+
+部署时配套使用同次构建的 Image、DTB、内核模块和 initramfs。镜像组装入口与输入格式见 [组装文档](https://github.com/xuguosheng110/rdk-x5-fnos/blob/v0.2.0/fnos/integration/image_assembly/README.md)。

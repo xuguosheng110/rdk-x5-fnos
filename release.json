@@ -1,16 +1,21 @@
 {
-  "version": "v0.1.0",
-  "status": "released_household_scope",
-  "product_acceptance": "accepted within documented first-release scope",
-  "compressed_bytes": 3797893380,
-  "compressed_sha256": "d70d3ee64033102b3dbba3630bcd68983dc78303542a2c35faab2a85d56557ac",
-  "image_bytes": 13157531648,
-  "image_sha256": "c9805a152e26772f187ed2c87c331b96fb58b93c7fd7997105854e6d2db34db3",
+  "version": "v0.2.0",
+  "distribution": "source_release",
+  "release_date": "2026-11-11",
+  "scope": "RDK X5 USB Basic storage creation fix",
+  "base_artifact": "storage-r16",
+  "kernel_release": "6.18.0 #5",
+  "kernel_source": {
+    "filename": "rdk-x5-linux-6.18-storage-r16-source.tar.gz",
+    "bytes": 275698779,
+    "sha256": "be478464d0ad66150bd8325858ef9f53b9f92528b88b5091ffe422f5c4d9dea3",
+    "config_sha256": "bee5f9981b13f72ea85374630a5545c0da58c776b51e57308bad36baac5ebf20"
+  },
+  "validation_image_sha256": "c7055131089a493eb12cd72f994b62781d828b13b4ace8c528636927543fc1f7",
   "validation_report": "TESTED.md",
   "remaining": [
-    "独立外接U盘未验收，尚待补测",
-    "原生权限提示保留，用户接受家庭共享范围"
-  ],
-  "base_artifact": "product-r14",
-  "release_date": "2026-11-11"
+    "Fresh native storage creation on a clean r16 installation",
+    "Two-drive ext4 RAID1 board test",
+    "Real llbitmap timeout fault injection and intermittent 16 GB USB disconnect"
+  ]
 }

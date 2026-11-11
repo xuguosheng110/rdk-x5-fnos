@@ -1,0 +1,26 @@
+From: Yu Kuai <yukuai@fnnas.com>
+Subject: [PATCH] md/md-llbitmap: fix percpu_ref not resurrected on suspend timeout
+
+Backport of the upstream author's patch:
+https://lists.openwall.net/linux-kernel/2026/01/23/1735
+Message-ID: <20260123182623.3718551-3-yukuai@fnnas.com>
+
+On timeout, restore the killed reference before the daemon continues to
+another page. This addresses timeout recovery, not the initial USB error.
+Context adapted to the X5 recovered Linux 6.18 source.
+
+Signed-off-by: Yu Kuai <yukuai@fnnas.com>
+--- a/drivers/md/md-llbitmap.c
++++ b/drivers/md/md-llbitmap.c
+@@ -712,8 +712,10 @@ static int llbitmap_suspend_timeout(struct llbitmap *llbitmap, int page_idx)
+ 	percpu_ref_kill(&pctl->active);
+ 
+ 	if (!wait_event_timeout(pctl->wait, percpu_ref_is_zero(&pctl->active),
+-			llbitmap->mddev->bitmap_info.daemon_sleep * HZ))
++			llbitmap->mddev->bitmap_info.daemon_sleep * HZ)) {
++		percpu_ref_resurrect(&pctl->active);
+ 		return -ETIMEDOUT;
++	}
+ 
+ 	return 0;
+ }
