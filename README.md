@@ -4,7 +4,9 @@ RDK X5 的 fnOS ARM 完整系统镜像与适配源码。首发 **v0.1.0 家庭�
 
 ## 下载与安装
 
-从 [Releases](https://github.com/xuguosheng110/rdk-x5-fnos/releases/latest) 下载镜像。GitHub 附件采用两个分卷，下载所有 `rdk-x5-fnos-v0.1.0.img.xz.part*` 、`parts.json` 和 `merge-image.py` 到同一目录，执行 `python3 merge-image.py`，自动合并并校验。百度网盘镜像链接将在用户提供后补充；完整文件名是 `rdk-x5-fnos-v0.1.0.img.xz`。
+从 [Releases](https://github.com/xuguosheng110/rdk-x5-fnos/releases/latest) 下载 `merge-image.py`，在一个空目录执行 `python3 merge-image.py --download`（Python 3.8+）。工具会自动下载 29 个小分卷，逐卷校验 SHA256，然后合并并校验完整镜像，不会写入任何物理磁盘。也可手动下载所有 `.part*` 文件到同一目录后运行 `python3 merge-image.py`。合并时需约 8 GB 可用空间，解压后还需约 13.2 GB。
+
+百度网盘链接稍后补充；网盘完整镜像为 `rdk-x5-fnos-v0.1.0.img.xz`，无需下载分卷或运行合并工具。
 
 解压 XZ 后得到整盘 `.img`，使用整盘镜像烧录工具写入系统 SD 卡。RDK X5 已有 U-Boot 时，可经串口使用 `ums 0 mmc 1` 映射 SD 卡到电脑；核对目标确为板卡 SD，再写入。不要把系统镜像写入数据盘。`ums 0 mmc 0` 对应 eMMC，不是本版本已验证的 SD 部署目标。
 
