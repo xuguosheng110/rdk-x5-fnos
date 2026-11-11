@@ -1,0 +1,29 @@
+From: Codex <noreply@openai.com>
+Subject: [PATCH] sample_dsp: use sample firmware by default
+
+The production adsp image hosts the GUA/SMF audio services and does not
+implement the command protocol exercised by sample_dsp.  The companion
+adsp-sample image contains horizon-algo-sample and hifi-fft-cplx handlers.
+
+Select adsp-sample by default so the documented path-only invocation does not
+time out while trying to speak the sample protocol to the production image.
+Users can still override the firmware name with -n.
+---
+ sample_dsp/sample_dsp.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sample_dsp/sample_dsp.cpp b/sample_dsp/sample_dsp.cpp
+index 1111111..2222222 100644
+--- a/sample_dsp/sample_dsp.cpp
++++ b/sample_dsp/sample_dsp.cpp
+@@ -56,7 +56,7 @@ pthread_t thread_id[IPC_CHAN_NUM];
+ 
+ static const char *dsp_path = "/usr/hobot/lib/firmware/";
+ static int32_t algo_type = 1;
+-static const char *dsp_name = "adsp";
++static const char *dsp_name = "adsp-sample";
+ 
+ volatile sig_atomic_t g_running = true;
+ 
+-- 
+2.39.5

@@ -1,0 +1,66 @@
+From 938082d3257ae58dcca2af7f8706178962e0605c Mon Sep 17 00:00:00 2001
+From: zhukao <zhuk1989@foxmail.com>
+Date: Tue, 14 Apr 2026 20:15:40 +0800
+Subject: [PATCH 1/2] fix: Fix crash issue at exit
+
+---
+ include/x5/hobot_mipi_cap_iml.hpp | 17 ++++++++++++++++-
+ src/hobot_mipi_cam.cpp            |  6 +++---
+ 2 files changed, 19 insertions(+), 4 deletions(-)
+
+diff --git a/include/x5/hobot_mipi_cap_iml.hpp b/include/x5/hobot_mipi_cap_iml.hpp
+index 6bbe61d..15113e5 100755
+--- a/include/x5/hobot_mipi_cap_iml.hpp
++++ b/include/x5/hobot_mipi_cap_iml.hpp
+@@ -77,7 +77,22 @@ typedef struct pipe_contex_s {
+ class HobotMipiCapIml : public HobotMipiCap {
+  public:
+   HobotMipiCapIml() {}
+-  ~HobotMipiCapIml() {}
++  ~HobotMipiCapIml() {
++    // Safety cleanup: ensure threads are joined before destruction
++    started_ = false;
++    if (multi_frame_task_ && multi_frame_task_->joinable()) {
++      multi_frame_task_->join();
++    }
++    if (sync_task_ && sync_task_->joinable()) {
++      sync_task_->join();
++    }
++    if (sub_multi_frame_task_ && sub_multi_frame_task_->joinable()) {
++      sub_multi_frame_task_->join();
++    }
++    if (sub_sync_task_ && sub_sync_task_->joinable()) {
++      sub_sync_task_->join();
++    }
++  }
+ 
+   // 初始化设备环境，如X3的sensor GPIO配置和时钟配置
+   // 返回值：0，成功；-1，配置失败
+diff --git a/src/hobot_mipi_cam.cpp b/src/hobot_mipi_cam.cpp
+index 6bfab1b..e678b0d 100755
+--- a/src/hobot_mipi_cam.cpp
++++ b/src/hobot_mipi_cam.cpp
+@@ -479,7 +479,7 @@ bool MipiCamIml::getCamCalibration(sensor_msgs::msg::CameraInfo &cam_info,
+   if (cal_v_ptr != nullptr && (cal_v_ptr->size() > 0)){
+     RCLCPP_INFO(rclcpp::get_logger("mipi_cap"), "get calibration camera info");
+     const sensor_msgs::msg::CameraInfo& cameraInfo = cal_v_ptr->at(0);
+-    memcpy( &cam_info, &cameraInfo, sizeof(sensor_msgs::msg::CameraInfo));
++    cam_info = cameraInfo;
+     return true;
+   } else {
+     return getCamCalibrationIml(cam_info, file_path);
+@@ -576,9 +576,9 @@ bool MipiCamIml::getDualCamCalibration(sensor_msgs::msg::CameraInfo &cam_info_l,
+   if (cal_v_ptr != nullptr && (cal_v_ptr->size() == 2)){
+     RCLCPP_INFO(rclcpp::get_logger("mipi_cap"), "get calibration camera info");
+     const sensor_msgs::msg::CameraInfo& cal_l = cal_v_ptr->at(0);
+-    memcpy( &cam_info_l, &cal_l, sizeof(sensor_msgs::msg::CameraInfo));
++    cam_info_l = cal_l;
+     const sensor_msgs::msg::CameraInfo& cal_r = cal_v_ptr->at(1);
+-    memcpy( &cam_info_r, &cal_r, sizeof(sensor_msgs::msg::CameraInfo));
++    cam_info_r = cal_r;
+     return true;
+   } else {
+     return getDualCamCalibrationIml(cam_info_l, cam_info_r, file_path);
+-- 
+2.53.0
+

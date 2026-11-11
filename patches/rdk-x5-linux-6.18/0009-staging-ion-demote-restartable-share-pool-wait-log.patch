@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Codex <codex@openai.com>
+Date: Mon, 31 Aug 2026 16:20:00 +0800
+Subject: [PATCH] staging: ion: demote restartable share pool wait log
+
+The share-pool monitor ioctl uses wait_event_interruptible().  A benign
+signal such as SIGCHLD can therefore return -ERESTARTSYS before userspace
+retries the ioctl.  The X5 hbmem fork-process sample reliably exercises
+this path when its diagnostic system() calls reap child processes, causing
+two misleading info-level "failed -512" messages despite successful pool
+operation and cleanup.
+
+Keep the return value and retry semantics unchanged.  Log the expected
+restartable interruption at debug level while retaining info-level logging
+for all other failures.
+
+Signed-off-by: Codex <codex@openai.com>
+---
+ drivers/staging/android/ion/ion.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/staging/android/ion/ion.c b/drivers/staging/android/ion/ion.c
+index 000000000..000000000 100644
+--- a/drivers/staging/android/ion/ion.c
++++ b/drivers/staging/android/ion/ion.c
+@@ -4383,7 +4383,10 @@ static int32_t ion_share_pool_monitor_ref_cnt(struct ion_client *client,
+ 	//coverity[misra_c_2012_rule_20_7_violation:SUPPRESS], ## violation reason SYSSW_V_20.7_01
+ 	ret = (int32_t) wait_event_interruptible(client->wq, client->wq_cnt != 0);
+ 	if (ret != 0) {
+-		(void)pr_info("%s failed %d\n", __func__, ret);
++		if (ret == -ERESTARTSYS)
++			pr_debug("%s interrupted %d\n", __func__, ret);
++		else
++			(void)pr_info("%s failed %d\n", __func__, ret);
+ 		return ret;
+ 	}
+ 
+-- 
+2.43.0

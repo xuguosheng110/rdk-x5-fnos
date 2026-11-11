@@ -1,0 +1,55 @@
+From: Codex <codex@openai.com>
+Subject: [PATCH] mailbox: hobot: allocate IPC HAL character major dynamically
+
+Linux reserves character major 188 for USB serial devices.  The vendor IPC
+HAL also hard-coded 188, so its probe fails with -EBUSY when USB serial is
+enabled and /dev/ipcdrv is never created.  Userspace discovers IPC HAL by
+device-node name rather than major number, therefore allocate a free major
+at probe time and use it consistently for device creation and teardown.
+
+---
+ drivers/mailbox/hobot/ipc/os/kernel/ipc_hal.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/mailbox/hobot/ipc/os/kernel/ipc_hal.c b/drivers/mailbox/hobot/ipc/os/kernel/ipc_hal.c
+index 5bbdd828a..f3c03701d 100644
+--- a/drivers/mailbox/hobot/ipc/os/kernel/ipc_hal.c
++++ b/drivers/mailbox/hobot/ipc/os/kernel/ipc_hal.c
+@@ -105,6 +105,7 @@ struct ipc_shm_data_t {
+ static struct ipc_shm_data_t ipc_shm_data;
+ static struct class *hal_ipc_shm_class;
+ static struct device *hal_ipc_shm_device;
++static unsigned int hal_ipc_shm_major;
+ 
+ static uint32_t bufsiz = 4096;
+ module_param(bufsiz, uint, S_IRUGO);
+@@ -1095,15 +1096,16 @@ static int32_t ipc_hal_probe(struct platform_device *pdev) {
+ 	ipc_shm_data.ipc_cfg = &ipc_dev->ipc_info;
+ 
+ 	shm_dbg("IPCF device start initializ...\n");
+-	ret = register_chrdev(DEVICE_MAJOR, DEVICE_NAME, &hal_ipc_shm_flops);
++	ret = register_chrdev(0, DEVICE_NAME, &hal_ipc_shm_flops);
+ 	if (ret < 0) {
+ 		shm_err("IPCF device can't register major number.\n");
+ 
+ 		return ret;
+ 	}
++	hal_ipc_shm_major = ret;
+ 
+ 	hal_ipc_shm_class = class_create("ipcdrv0");
+-	hal_ipc_shm_device = device_create(hal_ipc_shm_class, NULL, MKDEV(DEVICE_MAJOR, 0), NULL, "ipcdrv");
++	hal_ipc_shm_device = device_create(hal_ipc_shm_class, NULL, MKDEV(hal_ipc_shm_major, 0), NULL, "ipcdrv");
+ 	ret = dev_debugfs_init(&ipc_shm_data);
+ 	if (ret) {
+ 		shm_err("IPCF debugfs init failed.\n");
+@@ -1137,7 +1138,7 @@ static void ipc_hal_remove(struct platform_device *pdev) {
+ 	dev_debugfs_remove(&ipc_shm_data);
+ 	device_unregister(hal_ipc_shm_device);
+ 	class_destroy(hal_ipc_shm_class);
+-	unregister_chrdev(DEVICE_MAJOR, DEVICE_NAME);
++	unregister_chrdev(hal_ipc_shm_major, DEVICE_NAME);
+ 
+ 	shm_info("IPCF device removed.\n");
+ 
+-- 
+2.50.1

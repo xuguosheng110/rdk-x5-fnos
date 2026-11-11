@@ -1,0 +1,8 @@
+[Unit]
+Description=Samba SMB Daemon
+After=network.target
+[Service]
+Type=notify
+ExecStart=/usr/sbin/smbd --foreground --no-process-group
+[Install]
+WantedBy=multi-user.target

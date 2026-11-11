@@ -1,0 +1,48 @@
+From: Codex <codex@openai.com>
+Subject: [PATCH] remoteproc: hobot: adapt remove callback to Linux 6.18
+
+Linux 6.18 platform remove callbacks return void.  Convert the Hobot
+remoteproc callback and keep teardown progressing if the optional PM disable
+operation reports an error; returning early there would leak the rproc and
+reserved-memory resources and can no longer propagate an error to the core.
+---
+ drivers/remoteproc/hobot_remoteproc.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/remoteproc/hobot_remoteproc.c b/drivers/remoteproc/hobot_remoteproc.c
+index 9d9f5b0a7..169d18c70 100644
+--- a/drivers/remoteproc/hobot_remoteproc.c
++++ b/drivers/remoteproc/hobot_remoteproc.c
+@@ -2704,8 +2704,7 @@ no_revoke_err:
+ 	return -1;
+ }
+ 
+-static int32_t hobot_remoteproc_remove(struct platform_device *pdev) {
+-	int32_t ret = 0;
++static void hobot_remoteproc_remove(struct platform_device *pdev) {
+ 	struct hobot_rproc_pdata *pdata = (struct hobot_rproc_pdata *)dev_get_drvdata(&pdev->dev);
+ 
+ 	proc_node_deinit(pdev);
+@@ -2725,18 +2724,16 @@ static int32_t hobot_remoteproc_remove(struct platform_device *pdev) {
+ #endif
+ 
+ #ifdef CONFIG_HOBOT_REMOTEPROC_PM
+-	ret = hobot_remoteproc_pm_ctrl(pdata, 1, 0);
++	int32_t ret = hobot_remoteproc_pm_ctrl(pdata, 1, 0);
++
+ 	if (ret < 0) {
+ 		dev_err(pdata->dev, "HIFI pm disable error\n");
+-		return ret;
+ 	}
+ #endif
+ 
+ 	rproc_free(pdata->rproc);
+ 
+ 	deinit_reserve_mem(pdev);
+-
+-	return ret;
+ }
+ 
+ static const struct dev_pm_ops hobot_remoteproc_pm_ops = {
+-- 
+2.51.0

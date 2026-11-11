@@ -1,0 +1,57 @@
+From 6b4bd493ae2d1701c3498563d554d5ddd6497bc5 Mon Sep 17 00:00:00 2001
+From: Codex <codex@local.invalid>
+Date: Mon, 24 Aug 2026 19:13:16 +0800
+Subject: [PATCH] build: package arm64 kernel header host tools
+
+---
+ mk_kernel.sh | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/mk_kernel.sh b/mk_kernel.sh
+index 4ccb1fd..5b7b8f0 100755
+--- a/mk_kernel.sh
++++ b/mk_kernel.sh
+@@ -62,6 +62,17 @@ function make_kernel_headers() {
+ 
+     cd "${SRCDIR}"
+ 
++    # Header consumers run Kbuild host tools on the RDK X5 itself.  Build the
++    # same AArch64 tools shipped by the released hobot-kernel-headers package.
++    host_sysroot=$("${CROSS_COMPILE}gcc" -print-sysroot)
++    QEMU_LD_PREFIX="${host_sysroot}" make ARCH=arm64 \
++        HOSTCC="${CROSS_COMPILE}gcc" \
++        HOSTCXX="${CROSS_COMPILE}g++" "${kernel_config_file}"
++    QEMU_LD_PREFIX="${host_sysroot}" make -j"${N}" ARCH=arm64 \
++        HOSTCC="${CROSS_COMPILE}gcc" \
++        HOSTCXX="${CROSS_COMPILE}g++" \
++        scripts modules_prepare
++
+     mkdir -p "${HDRDIR}"/arch
+     cp -Rf "${SRCDIR}"/arch/arm64        "${HDRDIR}"/arch/
+     cp -Rf "${SRCDIR}"/include           "${HDRDIR}"
+@@ -116,6 +127,22 @@ function make_kernel_headers() {
+ 	    make M="${HDRDIR}"/scripts clean
+ 	    cp -Rf ${SRCDIR}/scripts/module.lds ${HDRDIR}/scripts
+ 	    cp -Rf ${SRCDIR}/scripts/module.lds.S ${HDRDIR}/scripts
++	    header_host_tools=(
++	        scripts/selinux/genheaders/genheaders
++	        scripts/selinux/mdp/mdp
++	        scripts/kallsyms
++	        scripts/asn1_compiler
++	        scripts/mod/mk_elfconfig
++	        scripts/mod/modpost
++	        scripts/dtc/fdtoverlay
++	        scripts/dtc/dtc
++	        scripts/sorttable
++	        scripts/kconfig/conf
++	        scripts/basic/fixdep
++	    )
++	    for tool in "${header_host_tools[@]}"; do
++	        install -D -m 0755 "${SRCDIR}/${tool}" "${HDRDIR}/${tool}"
++	    done
+ 	else
+ 		find . -iname "*.c" -print0 | while IFS= read -r -d '' file; do
+ 	        cp --parents -Rf "$file" "${HDRDIR}"
+-- 
+2.53.0
+

@@ -1,0 +1,45 @@
+From: Codex <noreply@openai.com>
+Subject: [PATCH] glmark2: select X5 Vivante userspace in non-login shells
+
+The vendor EGL/GLES libraries live in /usr/hobot/lib. Login shells prepend
+that directory from hobot-environment.sh, but automated and non-login shells
+do not. In that environment GLVND selects Mesa, which tries to load a missing
+vs-drm_dri.so and silently falls back to llvmpipe.
+
+Make the sample self-contained by prepending the vendor directory, resolving
+its own data path, propagating failures, and accepting additional glmark2
+arguments for unattended/off-screen regression runs.
+---
+ chip_base_test/11_gpu_3d_test/glmark2/run.sh | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/chip_base_test/11_gpu_3d_test/glmark2/run.sh b/chip_base_test/11_gpu_3d_test/glmark2/run.sh
+index 1111111..2222222 100755
+--- a/chip_base_test/11_gpu_3d_test/glmark2/run.sh
++++ b/chip_base_test/11_gpu_3d_test/glmark2/run.sh
+@@ -1,6 +1,15 @@
+ #!/bin/bash
++set -e
+ 
+-#insmod display module related drivers
++script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
++cd "$script_dir"
++
++# The X5 Vivante EGL/GLES stack is installed outside the distro GLVND path.
++# Keep it first even for non-login shells (SSH, CI and systemd launchers), or
++# Mesa will look for a non-existent vs-drm_dri.so and fall back to llvmpipe.
++export LD_LIBRARY_PATH="/usr/hobot/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
++
++# Load display-related drivers. modprobe is idempotent for already loaded ones.
+ modprobe panel-jc-050hd134
+ modprobe galcore
+ modprobe vio_n2d
+@@ -9,5 +18,4 @@ modprobe lontium_lt8618
+ modprobe vs-x5-syscon-bridge
+ modprobe vs_drm
+ 
+-#run glmark2
+-./bin/glmark2 --data-path ./data
++exec ./bin/glmark2 --data-path ./data "$@"
+-- 
+2.43.0

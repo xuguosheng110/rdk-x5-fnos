@@ -1,0 +1,200 @@
+From: Codex <noreply@openai.com>
+Subject: [PATCH] sysinfopro: probe optional libraries at runtime
+
+The system information tool only needs version strings from most HBRE
+libraries, but directly linking every library makes the entire utility fail
+when any optional library has an incompatible dependency.  This is currently
+visible with the OpenSSL 1.1 based te600 engine and the libgpiod 2 based efuse
+library on the Ubuntu 22.04 image.
+
+Keep boardinfo as the sole functional dependency and load each version symbol
+independently.  A missing or incompatible optional component is now reported
+as unavailable without hiding the remaining system information.
+---
+ sysinfopro/Makefile     |  6 +----
+ sysinfopro/sysinfopro.c | 98 +++++++++++++++++++++++--------------------------
+ sysinfopro/sysinfopro.h | 19 ----------
+ 3 files changed, 47 insertions(+), 76 deletions(-)
+
+diff --git a/sysinfopro/sysinfopro.c b/sysinfopro/sysinfopro.c
+index 1111111..2222222 100644
+--- a/sysinfopro/sysinfopro.c
++++ b/sysinfopro/sysinfopro.c
+@@ -3,7 +3,7 @@
+ #include <string.h>
+ #include <sys/stat.h>
+ #include <errno.h>
+-#include <openssl/evp.h>
++#include <dlfcn.h>
+ #include "sysinfopro.h"
+ #include "boardinfo.h"
+ 
+@@ -375,64 +375,68 @@ void get_board_info() {
+ 	}
+ 	printf("\n");
+ }
++
++typedef const char *(*version_fn_t)(void);
++
++static void print_library_version(const char *label, const char *library,
++		const char *symbol) {
++	void *handle;
++	version_fn_t version_fn;
++	const char *error;
++	const char *version;
++
++	handle = dlopen(library, RTLD_LAZY | RTLD_LOCAL);
++	if (handle == NULL) {
++		printf("\t%-30s Unavailable (%s)\n", label, dlerror());
++		return;
++	}
+ 
++	dlerror();
++	*(void **)(&version_fn) = dlsym(handle, symbol);
++	error = dlerror();
++	if (error != NULL) {
++		printf("\t%-30s Unavailable (%s)\n", label, error);
++		dlclose(handle);
++		return;
++	}
++
++	version = version_fn();
++	printf("\t%-30s %s\n", label, version != NULL ? version : "Unknown");
++	dlclose(handle);
++}
++
+ void get_hbre_version() {
+-	// licam
+-	const char* libcam_version_info = hb_libcam_get_version_info();
+-	// libvpf
+-	const char* libvpf_version_info = hb_libvpf_get_version_info();
+-	// libdsp
+-	const char* libdsp_version_info = hb_libdsp_get_version_info();
+-	// libboardinfo
+-	const char* libboardinfo_version_info = hb_libboardinfo_get_version_info();
+-	// libefuse
+-	const char* libefuse_version_info = hb_libefuse_get_version_info();
+-	// libhbmem
+-	const char* libhbmem_version_info = hb_libhbmem_get_version_info();
+-	// libhbipcfhal
+-	const char* libhbipcfhal_version_info = hb_libhbipcfhal_get_version_info();
+-	// libalog
+-	const char* libalog_version_info = hb_libalog_get_version_info();
+-	// libmultimedia
+-	const char* libmultimedia_version_info = hb_libmultimedia_get_version_info();
+-	// libte600_engine
+-	const char* libte600_engine_version_info = hb_libte600_engine_get_version_info();
+-	// libupdate
+-	const char* libupdate_version_info = hb_libupdate_get_version_info();
+-	// libpowerctl
+-	const char* libpowerctl_version_info = hb_libpowerctl_get_version_info();
+-	// libsecure_storage
+-	const char* libsecure_storage_version_info = hb_libsecure_storage_get_version_info();
+-	// libhbplayer
+-	const char* libhbplayer_version_info = hb_libhbplayer_get_version_info();
+-	// libdnn
+-	const char* libdnn_version_info = hbDNNGetVersion();
+-	// libNano2D libNano2Dutil
+-	const char* libNano2D_version_info = n2d_get_version_info();
+-	// gc8000l lib version
+-	const char* gc8000l_version_info = gc8000l_get_version_info();
+-	// x5_camsys libs
+-	const char* x5_camsys_libs_version_info = hb_libhal_get_version_info();
++	static const struct {
++		const char *label;
++		const char *library;
++		const char *symbol;
++	} libraries[] = {
++		{"libcam", "libcam.so", "hb_libcam_get_version_info"},
++		{"libvpf", "libvpf.so", "hb_libvpf_get_version_info"},
++		{"libdsp", "libdsp.so", "hb_libdsp_get_version_info"},
++		{"libboardinfo", "libboardinfo.so", "hb_libboardinfo_get_version_info"},
++		{"libefuse", "libefuse.so", "hb_libefuse_get_version_info"},
++		{"libhbmem", "libhbmem.so", "hb_libhbmem_get_version_info"},
++		{"libhbipcfhal", "libhbipcfhal.so", "hb_libhbipcfhal_get_version_info"},
++		{"libalog", "libalog.so", "hb_libalog_get_version_info"},
++		{"libmultimedia", "libmultimedia.so", "hb_libmultimedia_get_version_info"},
++		{"libte600_engine", "libte600_engine.so", "hb_libte600_engine_get_version_info"},
++		{"libupdate", "libupdate.so", "hb_libupdate_get_version_info"},
++		{"libpowerctl", "libpowerctl.so", "hb_libpowerctl_get_version_info"},
++		{"libsecure_storage", "libsecure_storage.so", "hb_libsecure_storage_get_version_info"},
++		{"libhbplayer", "libhbplayer.so", "hb_libhbplayer_get_version_info"},
++		{"libdnn", "libdnn.so", "hbDNNGetVersion"},
++		{"gc8000l", "/usr/hobot/lib/libEGL.so", "gc8000l_get_version_info"},
++		{"x5_camsys", "libhal.so", "hb_libhal_get_version_info"},
++		{"libNano2D/libNano2Dutil", "libNano2D.so", "n2d_get_version_info"},
++	};
+ 
+ 	printf("[HBRE lib version]:\n");
+-	printf("\t%-30s %s\n", "libcam", libcam_version_info);
+-	printf("\t%-30s %s\n", "libvpf", libvpf_version_info);
+-	printf("\t%-30s %s\n", "libdsp", libdsp_version_info);
+-	printf("\t%-30s %s\n", "libboardinfo", libboardinfo_version_info);
+-	printf("\t%-30s %s\n", "libefuse", libefuse_version_info);
+-	printf("\t%-30s %s\n", "libhbmem", libhbmem_version_info);
+-	printf("\t%-30s %s\n", "libhbipcfhal", libhbipcfhal_version_info);
+-	printf("\t%-30s %s\n", "libalog", libalog_version_info);
+-	printf("\t%-30s %s\n", "libmultimedia", libmultimedia_version_info);
+-	printf("\t%-30s %s\n", "libte600_engine", libte600_engine_version_info);
+-	printf("\t%-30s %s\n", "libupdate", libupdate_version_info);
+-	printf("\t%-30s %s\n", "libpowerctl", libpowerctl_version_info);
+-	printf("\t%-30s %s\n", "libsecure_storage", libsecure_storage_version_info);
+-	printf("\t%-30s %s\n", "libhbplayer", libhbplayer_version_info);
+-	printf("\t%-30s %s\n", "libdnn", libdnn_version_info);
+-	printf("\t%-30s %s\n", "gc8000l", gc8000l_version_info);
+-	printf("\t%-30s %s\n", "x5_camsys", x5_camsys_libs_version_info);
+-	printf("\t%-30s %s\n\n", "libNano2D/libNano2Dutil", libNano2D_version_info);
++	for (size_t i = 0; i < sizeof(libraries) / sizeof(libraries[0]); i++) {
++		print_library_version(libraries[i].label, libraries[i].library,
++				libraries[i].symbol);
++	}
++	printf("\n");
+ }
+ 
+ void get_kernel_modules() {
+diff --git a/sysinfopro/sysinfopro.h b/sysinfopro/sysinfopro.h
+index 1111111..2222222 100644
+--- a/sysinfopro/sysinfopro.h
++++ b/sysinfopro/sysinfopro.h
+@@ -1,23 +1,4 @@
+ #ifndef SYSINFOPRO_H
+ #define SYSINFOPRO_H
+ 
+-#include "hb_camera_interface.h"
+-#include "codec_cfg.h"
+-#include "hb_dsp_mgr.h"
+-#include "boardinfo.h"
+-#include "drobot_efuse.h"
+-#include "hb_mem_pc_alloc.h"
+-#include "ipcf_hal_data.h"
+-#include "logd.h"
+-#include "hb_media_codec.h"
+-#include "drobot_secure_storage.h"
+-#include "te600_engine.h"
+-#include "hobot_ota_hl.h"
+-#include "hb_powerctl_out_version.h"
+-#include "hb_tool_server.h"
+-#include "nano2D.h"
+-#include "gc_hal_version.h"
+-#include "hb_dnn.h"
+-
+-extern const char* hb_libhal_get_version_info(void);
+ #endif // SYSINFOPRO_H
+diff --git a/sysinfopro/Makefile b/sysinfopro/Makefile
+index 1111111..2222222 100644
+--- a/sysinfopro/Makefile
++++ b/sysinfopro/Makefile
+@@ -17,10 +17,6 @@ SRCS := $(foreach cf, $(CUR_DIR), $(wildcard $(cf)/*.c))
+ OBJS :=  $(SRCS:.c=.o)
+ 
+-LIBS += -lcrypto -lhbmem -lalog -lcam -lvpf -ldsp -lboardinfo -lefuse -lhbmem \
+-		-lhbipcfhal -lalog -lmultimedia -lte600_engine -lz -lminizip -lota_common \
+-		-lupdate -lpowerctl -lsecure_storage -lteec -lgpiod -ljsoncpp -lkcapi \
+-		-levent_pthreads -levent -lhbplayer -lNano2D -lebase -loslayer -lversion -lcommon -lisc \
+-		-lcamlog -lhal -lGAL -lEGL -ldrm_vivante -ldrm -lgbm -lgbm_viv -lcnn_intf -lhbrt_bayes_aarch64 -ldnn
++LIBS += -lboardinfo -ldl
+ 
+ INCS += -I ${HR_BUILD_OUTPUT_DIR}/deploy/system/usr/include/
+ INCS += -I ${HR_BUILD_OUTPUT_DIR}/deploy/system/usr/include/dnn
+-- 
+2.39.5

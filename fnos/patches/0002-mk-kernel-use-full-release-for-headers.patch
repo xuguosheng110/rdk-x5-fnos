@@ -1,0 +1,27 @@
+From: RDK X5 fnOS adaptation <build.invalid@example.invalid>
+Subject: [PATCH] mk_kernel: use full kernel release for headers
+
+The Makefile VERSION field contains only the major version (6), while KERNEL_VER
+already contains 6.1.83.  Use the full release for the staged headers directory
+so the resulting hobot-kernel-headers package matches uname -r and the module
+build/source links.
+---
+ mk_kernel.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mk_kernel.sh b/mk_kernel.sh
+index 156825e..4b22601 100755
+--- a/mk_kernel.sh
++++ b/mk_kernel.sh
+@@ -59,7 +59,7 @@ esac
+ 
+ function make_kernel_headers() {
+     SRCDIR=${KERNEL_SRC_DIR}
+-    HDRDIR="${KERNEL_BUILD_DIR}"/kernel_headers/usr/src/linux-headers-"${kernel_version}"
++    HDRDIR="${KERNEL_BUILD_DIR}"/kernel_headers/usr/src/linux-headers-"${KERNEL_VER}"
+     mkdir -p "${HDRDIR}"
+ 
+     cd "${SRCDIR}"
+-- 
+2.34.1
+

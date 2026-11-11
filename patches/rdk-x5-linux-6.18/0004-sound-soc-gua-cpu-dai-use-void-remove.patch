@@ -1,0 +1,33 @@
+From: Codex <codex@openai.com>
+Subject: [PATCH] ASoC: gua: adapt CPU DAI remove callback to Linux 6.18
+
+Linux 6.18 platform remove callbacks return void.  The GUA CPU DAI teardown
+has no error path, so update its signature and remove the constant return.
+---
+ sound/soc/gua/gua-cpu-dai.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/sound/soc/gua/gua-cpu-dai.c b/sound/soc/gua/gua-cpu-dai.c
+index 96d9cab8d..98f6584d1 100644
+--- a/sound/soc/gua/gua-cpu-dai.c
++++ b/sound/soc/gua/gua-cpu-dai.c
+@@ -396,7 +396,7 @@ static int gua_cpu_dai_probe(struct platform_device *pdev)
+ 	return gua_alsa_platform_register(&pdev->dev);
+ }
+ 
+-static int gua_cpu_dai_remove(struct platform_device *pdev)
++static void gua_cpu_dai_remove(struct platform_device *pdev)
+ {
+ 	struct gua_audio_info *au_info = platform_get_drvdata(pdev);
+ 	struct pcm_info *pcm_info = &au_info->pcm_info;
+@@ -406,8 +406,6 @@ static int gua_cpu_dai_remove(struct platform_device *pdev)
+ 
+ 	if (pcm_info->gua_wq)
+ 		destroy_workqueue(pcm_info->gua_wq);
+-
+-	return 0;
+ }
+ 
+ static struct platform_driver gua_cpu_dai_driver = {
+-- 
+2.51.0

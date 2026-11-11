@@ -1,0 +1,31 @@
+From: RDK X5 fnOS adaptation <build.invalid@example.invalid>
+Subject: [PATCH] mk_kernel: allow an explicit build job limit
+
+Keep the existing automatic CPU-count behavior unless JOBS is supplied.  This
+lets an isolated build cap memory pressure on a shared build host without
+changing any kernel, DTB, module, header, or package content.
+---
+ mk_kernel.sh | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/mk_kernel.sh b/mk_kernel.sh
+index b15d100..156825e 100755
+--- a/mk_kernel.sh
++++ b/mk_kernel.sh
+@@ -26,7 +26,12 @@ KERNEL_BUILD_DIR=${IMAGE_DEPLOY_DIR}/kernel
+ [ -n "${KERNEL_BUILD_DIR}" ] && [ ! -d "${KERNEL_BUILD_DIR}" ] && mkdir "$KERNEL_BUILD_DIR"
+ 
+-[ $(cat /proc/cpuinfo |grep 'processor'|wc -l) -gt 2 ] \
+-    && N="$((($(cat /proc/cpuinfo |grep 'processor'|wc -l)) - 2))" || N=1
++if [[ -n "${JOBS:-}" ]]; then
++    [[ "$JOBS" =~ ^[1-9][0-9]*$ ]] || { echo "Invalid JOBS: $JOBS" >&2; exit 2; }
++    N="$JOBS"
++else
++    [ $(grep -c '^processor' /proc/cpuinfo) -gt 2 ] \
++        && N="$(($(grep -c '^processor' /proc/cpuinfo) - 2))" || N=1
++fi
+ 
+ case "$RDK_SOC_NAME" in
+     x3)
+-- 
+2.34.1

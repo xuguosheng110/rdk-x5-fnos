@@ -1,0 +1,13 @@
+[Unit]
+Description=Force the RDK X5 HDMI connector on when HPD/EDID is unavailable
+After=hobot-modules-load.service systemd-udev-settle.service
+Before=lightdm.service display-manager.service
+ConditionPathExists=/sys/class/drm/card0-HDMI-A-1/status
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'printf on > /sys/class/drm/card0-HDMI-A-1/status'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=graphical.target

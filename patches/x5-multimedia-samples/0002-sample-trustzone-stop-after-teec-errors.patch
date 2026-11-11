@@ -1,0 +1,116 @@
+From: Codex <noreply@openai.com>
+Subject: [PATCH] sample_trustzone: stop after TEEC setup errors
+
+Do not continue with uninitialized TEEC objects after context, session, or
+command failures. The binary already links libteec, so call its API directly.
+---
+ sample_trustzone/sample_ca/sample_ca.c | 50 +++++++++------------------
+ 1 file changed, 17 insertions(+), 33 deletions(-)
+
+--- a/sample_trustzone/sample_ca/sample_ca.c
++++ b/sample_trustzone/sample_ca/sample_ca.c
+@@ -28,22 +28,6 @@
+ 
+ int main(int argc, char **argv)
+ {
+-	void *handle;
+-	TEEC_Result (*TEEC_InitializeContext)(const char *name, TEEC_Context *context);
+-	TEEC_Result (*TEEC_OpenSession)(TEEC_Context *context,
+-                             TEEC_Session *session,
+-                             const TEEC_UUID *destination,
+-                             uint32_t connectionMethod,
+-                             const void *connectionData,
+-                             TEEC_Operation *operation,
+-                             uint32_t *returnOrigin);
+-	TEEC_Result (*TEEC_InvokeCommand)(TEEC_Session *session,
+-                               uint32_t commandID,
+-                               TEEC_Operation *operation,
+-                               uint32_t *returnOrigin);
+-	void (*TEEC_CloseSession)(TEEC_Session *session);
+-	void (*TEEC_FinalizeContext)(TEEC_Context *context);
+-
+ 	int value = 0;
+ 	char *str = NULL;
+ 	int cmd = 0;
+@@ -71,12 +55,10 @@
+ 		return 0;
+ 	}
+ 
+-	handle = dlopen("libteec.so", RTLD_LAZY);
+-
+ 	TEEC_Result res;
+-	TEEC_Context ctx;
+-	TEEC_Session sess;
+-	TEEC_Operation op;
++	TEEC_Context ctx = {0};
++	TEEC_Session sess = {0};
++	TEEC_Operation op = {0};
+ 	TEEC_UUID uuid =  { 0xed53d67d, 0x4e58, 0x4b9a, \
+ 		{ 0x85, 0x14, 0x0a, 0x61, 0xc3, 0xc9, 0x44, 0x01} };
+ 
+@@ -84,21 +66,24 @@
+ 
+ 	/* Initialize a context connecting us to the TEE */
+ 	printf("Establish Context with OP-TEE!\n");
+-	TEEC_InitializeContext = dlsym(handle, "TEEC_InitializeContext");
+ 	res = TEEC_InitializeContext(NULL, &ctx);
+-	if (res != TEEC_SUCCESS)
+-		printf("TEEC_InitializeContext failed with code 0x%x", res);
++	if (res != TEEC_SUCCESS) {
++		fprintf(stderr, "TEEC_InitializeContext failed with code 0x%x\n", res);
++		return EXIT_FAILURE;
++	}
+ 
+ 	/*
+ 	 * Open a session to the Sample TA.
+ 	 */
+ 	printf("Establish Session with TA!\n");
+-	TEEC_OpenSession = dlsym(handle, "TEEC_OpenSession");
+ 	res = TEEC_OpenSession(&ctx, &sess, &uuid,
+ 			       TEEC_LOGIN_PUBLIC, NULL, NULL, &err_origin);
+-	if (res != TEEC_SUCCESS)
+-		printf("TEEC_Opensession failed with code 0x%x origin 0x%x",
++	if (res != TEEC_SUCCESS) {
++		fprintf(stderr, "TEEC_OpenSession failed with code 0x%x origin 0x%x\n",
+ 			res, err_origin);
++		TEEC_FinalizeContext(&ctx);
++		return EXIT_FAILURE;
++	}
+ 
+ 	/*
+ 	 * Execute a function in the TA by invoking it
+@@ -124,11 +109,14 @@
+ 	}
+ 
+ 	commandID = (uint32_t)cmd;
+-	TEEC_InvokeCommand = dlsym(handle, "TEEC_InvokeCommand");
+ 	res = TEEC_InvokeCommand(&sess, commandID, &op, &err_origin);
+-	if (res != TEEC_SUCCESS)
+-		printf("TEEC_InvokeCommand failed with code 0x%x origin 0x%x",
++	if (res != TEEC_SUCCESS) {
++		fprintf(stderr, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x\n",
+ 			res, err_origin);
++		TEEC_CloseSession(&sess);
++		TEEC_FinalizeContext(&ctx);
++		return EXIT_FAILURE;
++	}
+ 
+ 	if (cmd == TA_SAMPLE_CMD_INC_VALUE || cmd == TA_SAMPLE_CMD_DEC_VALUE) {
+ 		printf("TA incremented value to %d\n", op.params[0].value.a);
+@@ -144,14 +132,10 @@
+ 	 */
+ 
+ 	printf("Disconnect Session with TA!\n");
+-	TEEC_CloseSession = dlsym(handle, "TEEC_CloseSession");
+ 	TEEC_CloseSession(&sess);
+ 
+ 	printf("Disconnect Context with OP-TEE!\n");
+-	TEEC_FinalizeContext = dlsym(handle, "TEEC_FinalizeContext");
+ 	TEEC_FinalizeContext(&ctx);
+ 
+-	dlclose(handle);
+-
+ 	return 0;
+ }
+-- 
+2.39.5

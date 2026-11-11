@@ -1,0 +1,41 @@
+# RDK X5 × fnOS
+
+RDK X5 的 fnOS ARM 完整系统镜像与适配源码。首发 **v0.1.0 家庭共享版**，镜像基线为 product-r14，Linux 6.18.0。
+
+## 下载与安装
+
+从 [Releases](https://github.com/xuguosheng110/rdk-x5-fnos/releases/latest) 下载镜像。GitHub 附件采用两个分卷，下载所有 `rdk-x5-fnos-v0.1.0.img.xz.part*` 、`parts.json` 和 `merge-image.py` 到同一目录，执行 `python3 merge-image.py`，自动合并并校验。百度网盘镜像链接将在用户提供后补充；完整文件名是 `rdk-x5-fnos-v0.1.0.img.xz`。
+
+解压 XZ 后得到整盘 `.img`，使用整盘镜像烧录工具写入系统 SD 卡。RDK X5 已有 U-Boot 时，可经串口使用 `ums 0 mmc 1` 映射 SD 卡到电脑；核对目标确为板卡 SD，再写入。不要把系统镜像写入数据盘。`ums 0 mmc 0` 对应 eMMC，不是本版本已验证的 SD 部署目标。
+
+上电后在浏览器打开 `http://板卡IP:5666/`，按原生页面创建账号、选择/挂载存储卷和应用位置。已有数据盘选择挂载，不要格式化。相册、影视和所需模型自动准备；无需 SSH 打补丁、修改权限或手动部署 AI。Wi-Fi 通过原生网络页面配置。通用镜像不包含个人密码、Wi-Fi 凭据或开发 SSH 密钥。
+
+## 已验证功能
+
+- 完整镜像烧录与全量回读 SHA256 一致；受控断电冷启动。
+- 有线 Web/SMB、Wi-Fi 配置及冷启动自动重连。
+- 原生影视 H.264/HEVC 8-bit SDR 硬件解码和编码；冷启动后 480p 播放 529/629 帧，均零丢帧。
+- 官方 BPU 人脸检测、106 点关键点和 FaceID128；两人单照/合照分组一致，空白图片无脸。
+- 原生文件、回收站、相册/影视目录、备份、应用升级、非 root 应用和容器跨 UID 共享读写。
+- WebDAV 数据卷缓存、冷启动自动挂载、服务崩溃后的排队上传恢复及远端校验。
+
+## 首发范围与已知限制
+
+- **家庭共享版**：数据卷采用共享读写策略，不提供官方 Windows ACL v2 的逐用户权限隔离。存储页可能显示“权限未适配”；本版不要执行权限转换。系统目录和账号认证仍受保护。此限制已作为首发范围明确接受。
+- 独立外接 U 盘入口未做实物验收，首发不以此为前置；现有 USB 数据盘作为原生数据卷的功能已验证。
+- 硬件转码覆盖已测渐进式 8-bit 4:2:0 SDR H264/HEVC，缩放仍为 CPU；10-bit/HDR/4:4:4 等不支持格式走软件回退。不承诺 4K60 或全格式硬件转码。
+- 人脸模型使用 BPU；中文语义搜索保留原生 CPU 路径。未测突然断电过程中写入/上传的数据无损，不把受控冷启动外推为这一保证。
+- 为保留 X5 启动链，原生系统自动更新、无人值守升级和不匹配的启动固件更新已禁用。不要直接进行通用 fnOS 内核/固件升级；后续使用本项目验证的完整镜像。
+- 首次初始化、媒体库选择、Wi-Fi 名称密码等使用官方式交互；这是通用镜像，不预置私人配置。不是飞牛或地瓜官方发布的商业系统。
+
+## 代码结构
+
+- `fnos/integration/image_assembly`：离线镜像组装、原生服务适配、应用/模型首次启动准备。
+- `fnos/integration/native_media`：原生多媒体桥接；`native_photos`：人脸/相册适配与模型来源。
+- `fnos/integration/acceleration`：共享存储、BPU/VPU 辅助代码。
+- `fnos/lab`、`fnos/integration/hardware`：开发者使用的身份核验、串口、烧录及互锁工具；包含历史诊断入口，不是最终用户安装必需步骤。使用前必须绑定自己的设备，不能照搬实验室设备路径。
+- `fnos/tests`、各子目录 `tests`：离线回归测试；`patches`：内核及上游组件补丁。
+
+源码不附带私有实验室日志、账户、模型二进制或第三方完整 rootfs。构建需要合法取得同版本 fnOS ARM 用户态、RDK BSP/6.18 内核产物、厂商运行库和模型；按镜像组装器的输入校验要求提供。子目录文档保留历史开发说明，发布范围以本 README 和 Release 为准。该仓库公开适配层代码，不声称完整闭源系统均可从本仓库独立源码重建。
+
+上游：[D-Robotics](https://github.com/D-Robotics)、[faceid](https://github.com/D-Robotics/faceid)、[fnOS](https://www.fnnas.com/)、[ophub/fnnas](https://github.com/ophub/fnnas)。第三方组件版权和许可保留，见 `THIRD_PARTY.md`。

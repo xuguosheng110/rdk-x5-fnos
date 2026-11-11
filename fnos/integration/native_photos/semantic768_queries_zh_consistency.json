@@ -1,0 +1,27 @@
+{
+  "schema": "fnos-semantic768-chinese-consistency-queries/v1",
+  "fixture_manifest_sha256": "9162474d3276dd2128e4191b051eec75b5ad54bd87385f5e97962f7446f93364",
+  "scope": "通用中文查询的原CPU与候选BPU排序一致性；没有人工相关性标签，不能称为搜索准确率或真实相册产品验收。",
+  "queries": [
+    {"text": "户外的人"},
+    {"text": "房间里的人"},
+    {"text": "一只狗"},
+    {"text": "大象"},
+    {"text": "长颈鹿"},
+    {"text": "熊"},
+    {"text": "飞机"},
+    {"text": "汽车"},
+    {"text": "公交车"},
+    {"text": "水上的船"},
+    {"text": "公园长椅"},
+    {"text": "雨伞"},
+    {"text": "滑板运动"},
+    {"text": "网球运动"},
+    {"text": "披萨"},
+    {"text": "蛋糕"},
+    {"text": "杯子和餐具"},
+    {"text": "餐桌"},
+    {"text": "电视"},
+    {"text": "室内盆栽"}
+  ]
+}

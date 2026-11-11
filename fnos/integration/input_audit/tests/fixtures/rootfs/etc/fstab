@@ -1,0 +1,2 @@
+UUID=11111111-2222-3333-4444-555555555555 / ext4 defaults,noatime 0 1
+UUID=ABCD-1234 /boot/efi vfat umask=0077 0 1

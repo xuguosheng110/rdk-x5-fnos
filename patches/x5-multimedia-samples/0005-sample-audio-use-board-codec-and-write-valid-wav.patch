@@ -1,0 +1,238 @@
+From: Codex <noreply@openai.com>
+Subject: [PATCH] sample_audio: use board codec and write valid WAV files
+
+On X5 the first ALSA card is the GUA virtual audio service, while the onboard
+ES8326 codec is exposed by the stable duplexaudio name.  The sample also wrote
+PCM data at offset zero, never incremented the WAV data length, used a fixed
+four-byte frame allocation, and timed short recordings with one-second wall
+clock granularity.
+
+Select the named board codec and mixer, reserve and finalize a real WAV header,
+derive buffer sizes from the selected ALSA format, record an exact frame count,
+and drain playback before closing the device.
+---
+ sample_audio/sample_audio.c | 91 +++++++++++++++++++++++++++++----------------
+ 1 file changed, 59 insertions(+), 32 deletions(-)
+
+diff --git a/sample_audio/sample_audio.c b/sample_audio/sample_audio.c
+index 1111111..2222222 100644
+--- a/sample_audio/sample_audio.c
++++ b/sample_audio/sample_audio.c
+@@ -12,12 +12,13 @@
+ #include <sys/ioctl.h>
+ #include <linux/soundcard.h>
+ #include <alsa/asoundlib.h>
+-#include <time.h>
++#include <stdint.h>
+ 
+ // 定义一个Audio设备基础信息结构体
+ typedef struct {
+     char capture_device[32];
+     char playback_device[32];
++    char mixer_device[32];
+     unsigned int rate;
+     unsigned int bits;
+     unsigned int channels;
+@@ -29,7 +30,8 @@ AudioConfig config = {
+     // .capture_device = "default", // 默认录音设备
+     // .playback_device = "default", // 默认播放设备
+-    .capture_device = "hw:0,0",
+-    .playback_device = "hw:0,0",
++    .capture_device = "hw:duplexaudio,0",
++    .playback_device = "hw:duplexaudio,0",
++    .mixer_device = "hw:duplexaudio",
+     .rate = 48000,
+     .bits = 16,
+     .channels = 2,
+@@ -155,7 +157,7 @@ int check_supported_rate(snd_pcm_t *pcm_handle, snd_pcm_hw_params_t *params, uns
+ }
+ 
+ // 设置控制值函数（如设置增益）
+-int set_control_value(const char *control_name, long value) {
++int set_control_value(const AudioConfig *config, const char *control_name, long value) {
+     snd_mixer_t *handle;
+     snd_mixer_elem_t *elem;
+     snd_mixer_selem_id_t *sid;
+@@ -165,7 +167,7 @@ int set_control_value(const char *control_name, long value) {
+         return -1;
+     }
+ 
+-    if (snd_mixer_attach(handle, "default") < 0) {
++    if (snd_mixer_attach(handle, config->mixer_device) < 0) {
+         fprintf(stderr, "Unable to attach mixer\n");
+         snd_mixer_close(handle);
+         return -1;
+@@ -246,12 +248,14 @@ void record_audio(const AudioConfig *config) {
+     int ret;
+     char *buffer;
+     float gain = 10;//文件操作设置数字增益，改动的是数据幅值，但有限制，后续可以根据实际情况调整或者删除
++    size_t bytes_per_frame;
++    AudioConfig output_config;
+ 
+     const char *control_name = "ADC PGA Gain";//ADC PGA Gain,需要根据实际情况改写，可放文件开头做全局变量
+     int value_adc_pga_gain = 8;//ADC PGA Gain value,需要根据实际情况改写，可放文件开头做全局变量
+     unsigned int rate = config->rate;
+ 
+-    if (set_control_value(control_name, value_adc_pga_gain) != 0) {
++    if (set_control_value(config, control_name, value_adc_pga_gain) != 0) {
+         fprintf(stderr, "Failed to set control value\n");
+         exit(1);
+     }
+@@ -287,7 +291,16 @@ void record_audio(const AudioConfig *config) {
+ 
+     // 获取缓冲区大小
+     snd_pcm_hw_params_get_period_size(params, &frames, 0);
+-    buffer = (char *) malloc(frames * 4);  // 2 声道，每个采样 2 字节
++    bytes_per_frame = config->channels * snd_pcm_format_physical_width(format) / 8;
++    output_config = *config;
++    output_config.rate = rate;
++    output_config.bits = snd_pcm_format_physical_width(format);
++    buffer = (char *) malloc(frames * bytes_per_frame);
++    if (buffer == NULL) {
++        fprintf(stderr, "Unable to allocate recording buffer.\n");
++        snd_pcm_close(pcm_handle);
++        exit(1);
++    }
+ 
+     // 打开文件用于保存录音数据
+     FILE *file = fopen(config->record_file, "wb");
+@@ -296,15 +309,19 @@ void record_audio(const AudioConfig *config) {
+         exit(1);
+     }
+ 
++    // Reserve the header before writing PCM data. It is finalized below.
++    write_wav_header(file, &output_config, 0);
++
+     // 录音并保存到文件
+     printf("Start recording...\n");
+     unsigned int data_size = 0;  // 音频数据大小
+ 
+-    // 开始录音并保存到文件
+-    time_t start_time = time(NULL);
+-    time_t end_time = start_time + config->duration;  // 计算录音结束时间
++    // Record an exact number of frames instead of using one-second wall-clock
++    // granularity, which can truncate short recordings.
++    uint64_t target_frames = (uint64_t)config->duration * rate;
++    uint64_t recorded_frames = 0;
+ 
+-    while (time(NULL) < end_time) {
++    while (recorded_frames < target_frames) {
+         ret = snd_pcm_readi(pcm_handle, buffer, frames);
+         if (ret == -EPIPE) {
+             fprintf(stderr, "Buffer overflow error occurred!\n");
+@@ -317,23 +334,35 @@ void record_audio(const AudioConfig *config) {
+         //     data_size += ret * 4;  // 增加数据大小
+         // }
+         } else {
++            snd_pcm_uframes_t frames_to_write = ret;
++            if (frames_to_write > target_frames - recorded_frames) {
++                frames_to_write = target_frames - recorded_frames;
++            }
+             // 可以通过增加数字增益，这一段可以根据情况注释掉，使用上面未注释的。后续改进
+             // printf("Get %d frames\n", ret);
+-            int16_t *samples = (int16_t *)buffer;  // 假设是 16 位采样
+-            size_t sample_count = ret * config->channels;
+-            for (size_t j = 0; j < sample_count; j++) {
+-                int sample = samples[j] * gain;
+-                if (sample > 32767) sample = 32767;  // 防止溢出
+-                if (sample < -32768) sample = -32768;
+-                samples[j] = (int16_t)sample;
++            if (format == SND_PCM_FORMAT_S16_LE) {
++                int16_t *samples = (int16_t *)buffer;
++                size_t sample_count = frames_to_write * config->channels;
++                for (size_t j = 0; j < sample_count; j++) {
++                    int sample = samples[j] * gain;
++                    if (sample > 32767) sample = 32767;
++                    if (sample < -32768) sample = -32768;
++                    samples[j] = (int16_t)sample;
++                }
+             }
+-            fwrite(buffer, 1, ret * config->channels * (config->bits / 8), file);
++            size_t bytes = frames_to_write * bytes_per_frame;
++            if (fwrite(buffer, 1, bytes, file) != bytes) {
++                fprintf(stderr, "Unable to write recorded PCM data.\n");
++                break;
++            }
++            data_size += bytes;
++            recorded_frames += frames_to_write;
+         }
+     }
+ 
+     // 写入WAV头部
+     fseek(file, 0, SEEK_SET);  // 回到文件开头写入头部
+-    write_wav_header(file, config, data_size);
++    write_wav_header(file, &output_config, data_size);
+ 
+     // 关闭 PCM 设备和文件
+     snd_pcm_close(pcm_handle);
+@@ -352,11 +381,12 @@ void play_audio(const AudioConfig *config) {
+     char *buffer;
+     int ret;
+     unsigned int rate = config->rate;
++    size_t bytes_per_frame;
+ 
+     const char *control_name = "DAC";//也是codec控件
+     int value_dac = 191;//DAC Vaule数值，可以通过amixer等命令查看详细范围，或者其他接口查看
+ 
+-    if (set_control_value(control_name, value_dac) != 0) {
++    if (set_control_value(config, control_name, value_dac) != 0) {
+         fprintf(stderr, "Failed to set control value\n");
+         exit(1);
+     }
+@@ -393,7 +423,13 @@ void play_audio(const AudioConfig *config) {
+ 
+     // 获取缓冲区大小
+     snd_pcm_hw_params_get_period_size(params, &frames, 0);
+-    buffer = (char *) malloc(frames * config->channels * (config->bits / 8));  // 动态分配缓冲区大小
++    bytes_per_frame = config->channels * snd_pcm_format_physical_width(format) / 8;
++    buffer = (char *) malloc(frames * bytes_per_frame);
++    if (buffer == NULL) {
++        fprintf(stderr, "Unable to allocate playback buffer.\n");
++        snd_pcm_close(pcm_handle);
++        exit(1);
++    }
+ 
+     // 打开文件
+     file = fopen(config->record_file, "rb");
+@@ -408,18 +444,21 @@ void play_audio(const AudioConfig *config) {
+     // 播放音频
+     printf("playing...\n");
+     size_t read_size;
+-    while ((read_size = fread(buffer, 1, frames * config->channels * (config->bits / 8), file)) > 0) {
+-        ret = snd_pcm_writei(pcm_handle, buffer, read_size / (config->channels * (config->bits / 8)));
++    while ((read_size = fread(buffer, 1, frames * bytes_per_frame, file)) > 0) {
++        ret = snd_pcm_writei(pcm_handle, buffer, read_size / bytes_per_frame);
+         if (ret == -EPIPE) {
+             fprintf(stderr, "Buffer Overflow Error Occurred!\n");
+             snd_pcm_prepare(pcm_handle);
+         } else if (ret < 0) {
+             fprintf(stderr, "Error playing audio: %s\n", snd_strerror(ret));
+-        } else if (ret != (read_size / (config->channels * (config->bits / 8)))) {
++        } else if (ret != (read_size / bytes_per_frame)) {
+             fprintf(stderr, "The number of frames written does not match the number of frames read.\n");
+         }
+     }
+ 
++    // Wait until all queued frames reach the device before closing it.
++    snd_pcm_drain(pcm_handle);
++
+     // 关闭 PCM 设备和文件
+     snd_pcm_close(pcm_handle);
+     fclose(file);
+@@ -626,6 +665,7 @@ int main(int argc, char **argv) {
+     printf("Settings:\n");
+     printf("  Capture Device        : %s\n", config.capture_device);
+     printf("  Playback Device       : %s\n", config.playback_device);
++    printf("  Mixer Device          : %s\n", config.mixer_device);
+     printf("  Sampling Rate         : %d Hz\n", config.rate);
+     printf("  Bit Depth             : %d bit\n", config.bits);
+     printf("  Channels              : %d\n", config.channels);
+@@ -634,4 +674,4 @@ int main(int argc, char **argv) {
+ 
+     handle_user_command(&config);
+     return 0;
+-}
+\ No newline at end of file
++}
+-- 
+2.39.5

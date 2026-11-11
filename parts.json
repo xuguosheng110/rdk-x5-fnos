@@ -1,0 +1,16 @@
+{
+  "file": "rdk-x5-fnos-v0.1.0.img.xz",
+  "sha256": "d70d3ee64033102b3dbba3630bcd68983dc78303542a2c35faab2a85d56557ac",
+  "parts": [
+    {
+      "name": "rdk-x5-fnos-v0.1.0.img.xz.part01",
+      "size": 1900000000,
+      "sha256": "3b797085603901438195111951702e9366037a0274c9f6f5bfd3e04794e4ad88"
+    },
+    {
+      "name": "rdk-x5-fnos-v0.1.0.img.xz.part02",
+      "size": 1897893380,
+      "sha256": "8e085baf22bd2e37d8b956c1179b50255d79bb885aed9db045b39c220c4448f2"
+    }
+  ]
+}

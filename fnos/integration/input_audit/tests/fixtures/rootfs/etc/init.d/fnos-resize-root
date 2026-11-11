@@ -1,0 +1,9 @@
+#!/bin/sh
+# fixture only; never executed by the audit
+DEV=$(findmnt -n -o SOURCE /)
+case "$DEV" in
+  /dev/mmcblk0p2) PART=/dev/mmcblk0p1 ;;
+  *) PART="$DEV" ;;
+esac
+growpart "$PART" 2 || true
+resize2fs "$DEV"

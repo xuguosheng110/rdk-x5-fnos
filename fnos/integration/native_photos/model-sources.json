@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "faceid": {
+    "source": "https://github.com/D-Robotics/faceid",
+    "commit": "1d2dee111b813cf6bf45373f6a9859e2c4e3fc02",
+    "model_url": "https://media.githubusercontent.com/media/D-Robotics/faceid/1d2dee111b813cf6bf45373f6a9859e2c4e3fc02/config/x5/insightface.bin",
+    "sha256": "bd9ff56e7b14e26bad16d0ee0f98f39d41261c3cf7ba85cad9dfdafbc9332d61",
+    "hash_source": "Git LFS pointer at pinned commit; downloaded payload verified",
+    "bytes": 62261639,
+    "input": "NV12 NCHW [1,3,112,112], aligned [1,3,112,128], 21504 bytes, ROI inference",
+    "output": "float32 [1,512,1,1], 2048 bytes",
+    "acceptance": "FAIL on two-subject separation; experimental, not default"
+  },
+  "clip": {
+    "source": "https://github.com/D-Robotics/rdk_model_zoo",
+    "commit": "218a3e78970c3f1ee117d59586cf8dd3ada3864f",
+    "image_url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/clip/img_encoder.bin",
+    "image_sha256": "99f54b25c74e3a9d19aaf0d258d8a6939f46e2752d43673881565015ef8ae1e1",
+    "text_url": "https://archive.d-robotics.cc/downloads/rdk_model_zoo/rdk_x5/clip/text_encoder.onnx",
+    "text_sha256": "d2a53b45c90c4e66c139143d19ff76799288d6114ed981726f45364d1cad9298",
+    "hash_source": "observed downloaded payload; not an independently published checksum",
+    "input": "float32 RGB NCHW [1,3,224,224], 0..1",
+    "output": "float32 512-dimensional embedding"
+  },
+  "faceid128": {
+    "source": "https://github.com/D-Robotics/faceid",
+    "commit": "1d2dee111b813cf6bf45373f6a9859e2c4e3fc02",
+    "model_path": "config/x5/faceID.hbm",
+    "sha256": "aa3ab3230f0957bc60a9b0c3dbd21e7900a14fe7aa7b1031f3b78fb0e0ab7ce1",
+    "input": "NV12 separate Y/UV, [1,3,112,112] padded stride128",
+    "output": "S32 [1,128,1,1], physical [1,128,1,4]; take every fourth element as upstream FaceIDExtractor",
+    "native_rpc": "128 learned values, zero-pad to512 then normalize; cosine preserved",
+    "namespace": "drobotics-faceid128-aa3ab3230f0957bc",
+    "status": "PASS two public subjects: native Photos A6/B5 grouping; broad accuracy and clean boot pending",
+    "hash_source": "regular file from pinned upstream Git commit, SHA256 verified on server and board"
+  },
+  "official_face_detector": {
+    "source": "https://github.com/D-Robotics/mono2d_body_detection",
+    "commit": "ff30fa3c554973e1a9b22b9efbcb58d366052c29",
+    "model_path": "config/x5/multitask_body_head_face_hand_kps_960x544.hbm",
+    "sha256": "bae0c2ec8c1c66d2c2ff4e51877dbe2514a5aea3fb714856897c4c696d6d0729",
+    "bytes": 4587520,
+    "output": "face branch5, F32 packed records, maximum30",
+    "status": "PASS isolated real X5 detector/landmarks/FaceID128:11public single-face fixtures plus blank and two-subject composite. Native incremental regression tracked separately.",
+    "runtime_warning": "model HBRT3.15.47 vs runtime3.15.55; validate outputs, do not hide warning"
+  },
+  "official_face_landmarks": {
+    "source": "https://github.com/D-Robotics/face_landmarks_detection",
+    "commit": "b6160bd3471f6be3018dec93c95090222dcd550c",
+    "model_path": "config/x5/faceLandmark106pts.hbm",
+    "sha256": "bf0316c870ddd7854af368f310b03bc33c8a756d8ddae4d3aba5e2a1b564a102",
+    "bytes": 3014656,
+    "input": "NV12 separate, ROI inference from source image",
+    "postprocess": "official two32-bin axes with quarter-bin interpolation; output106x3",
+    "five_point_indices": [
+      104,
+      105,
+      54,
+      84,
+      90
+    ],
+    "mapping_evidence": "Numbered overlay:104/105 pupils,74/83 upper eyelid points. identity-r2:11fixtures same_min0.985472,different_max-0.062650; aspect-preserved two-subject composite minimum matching0.811600, threshold0.64 unchanged."
+  }
+}

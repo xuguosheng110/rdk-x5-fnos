@@ -1,0 +1,62 @@
+{
+  "schema": "fnos-board-bindings/v1",
+  "note": "Reviewed, non-secret board registry. Fill serial.port, allowed_target_serials and mapping_verified only after the read-only preflight and a user-confirmed physical mapping. Credentials never belong in this file.",
+  "lock": {
+    "protocol": "fnos-board-lock/v1",
+    "root_env": "FNOS_BOARD_LOCK_ROOT",
+    "fallback_env": "FNOS_LAB_STATE_DIR",
+    "default_root": "~/.local/state/fnos-lab",
+    "path_pattern": "locks/board-<sha256(board_id)[:32]>.lock"
+  },
+  "boards": {
+    "x5-lab-01": {
+      "board_id": "x5-lab-01",
+      "model": "RDK X5",
+      "reviewed": false,
+      "power": {
+        "backend": "cp5-ac",
+        "channel": "s2",
+        "mapping_verified": false,
+        "wired": false,
+        "cp5": {
+          "did": "",
+          "port": "s2",
+          "siid": 5,
+          "piid": 1,
+          "model_allowlist": [
+            "cuco.plug.cp5",
+            "cuco.plug.cp5d"
+          ]
+        },
+        "verified_by": "Not configured; verify physical mapping before use",
+        "control_path": "Canonical CP5 on/off/cycle --port s2, with parent fnos.lab board_lock held; legacy usb-only executor refuses this binding"
+      },
+      "serial": {
+        "port": "",
+        "baud": 115200
+      },
+      "allowed_target_serials": [],
+      "legacy": {
+        "direct_flash": "not_integrated",
+        "direct_command": "blocked_by_guard",
+        "ha_power": "not_integrated",
+        "raw_device": "outside_file_lock",
+        "mijia_app": "outside_file_lock",
+        "manual_unplug": "outside_file_lock"
+      },
+      "access_paths": [
+        "fnos-lab-run",
+        "mijia-cp5-usb",
+        "legacy-flash-adapter",
+        "legacy-flash-direct",
+        "legacy-flash-command",
+        "ha-power",
+        "raw-device-write",
+        "mijia-app",
+        "manual-unplug"
+      ],
+      "reviewed_scope": "read-only-diagnostic 2026-11-06; not a write authorization",
+      "note": "Example only; configure your own board identity and power mapping."
+    }
+  }
+}

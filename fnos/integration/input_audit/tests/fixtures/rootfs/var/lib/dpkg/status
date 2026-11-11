@@ -1,0 +1,34 @@
+Package: libc6
+Status: install ok installed
+Version: 2.36-9+deb12u8
+Architecture: arm64
+
+Package: systemd
+Status: install ok installed
+Version: 252.30-1~deb12u2
+Architecture: arm64
+
+Package: samba
+Status: install ok installed
+Version: 2:4.17.12+dfsg-0+deb12u1
+Architecture: arm64
+
+Package: samba-common-bin
+Status: install ok installed
+Version: 2:4.17.12+dfsg-0+deb12u1
+Architecture: arm64
+
+Package: btrfs-progs
+Status: install ok installed
+Version: 6.2-1+deb12u1
+Architecture: arm64
+
+Package: mdadm
+Status: install ok installed
+Version: 4.2-5
+Architecture: arm64
+
+Package: openssh-server
+Status: install ok installed
+Version: 1:9.2p1-2+deb12u3
+Architecture: arm64

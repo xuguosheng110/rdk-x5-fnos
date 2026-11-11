@@ -1,0 +1,1342 @@
+From 7bd8c5c4d6b2795e58ec6cafe2ce4c49a652af02 Mon Sep 17 00:00:00 2001
+From: xuguosheng110 <xgs11@qq.com>
+Date: Mon, 31 Aug 2026 12:34:53 +0800
+Subject: [PATCH] media: camsys: port X5 camera drivers to Linux 6.18
+
+---
+ cam_subsys/hobot_dev_camsys.c      |  6 ++----
+ codec_node/hobot_dev_codec_node.c  |  6 ++----
+ gdc/hobot_dev_gdc.c                |  6 ++----
+ lpwm/hobot_lpwm_dev.c              | 28 ++++++++++++----------------
+ lpwm/hobot_lpwm_dev.h              |  2 +-
+ lpwm/hobot_lpwm_ops.c              | 15 ++++++++-------
+ mipi/hobot_mipi_debug.c            |  2 +-
+ mipi/hobot_mipi_host.c             |  4 +---
+ mipi/hobot_mipi_host_cdev.c        |  2 +-
+ mipi/hobot_mipi_phy.c              |  4 +---
+ osd/Makefile                       |  1 +
+ osd/hobot_osd_dev.c                |  6 ++----
+ sensor/src/camera_i2c.c            |  4 ++--
+ sensor/src/camera_subdev.c         |  3 ++-
+ vcon/hobot_vin_vcon_dev.c          |  3 +--
+ vin_node/hobot_dev_vin_node.c      |  9 +++------
+ vin_node/hobot_dev_vin_node.h      |  2 +-
+ vpf/hobot_vpf_manager.c            |  2 +-
+ vsi_cam/base/cam_ctrl.c            |  3 +--
+ vsi_cam/base/cam_pulse.c           |  3 +--
+ vsi_cam/base/dw_crc.c              |  3 +--
+ vsi_cam/csi/csi_wrapper.c          |  3 +--
+ vsi_cam/isc/ion_mem_helper.c       | 19 ++-----------------
+ vsi_cam/isc/isc.c                  |  2 +-
+ vsi_cam/native/isp/isp_drv.c       |  5 ++---
+ vsi_cam/native/sif/hobot_dev_cim.c |  7 +++----
+ vsi_cam/native/vse/vse_drv.c       |  5 ++---
+ vsi_cam/v4l2/cam_buf.c             |  4 ++--
+ vsi_cam/v4l2/csi_drv.c             | 19 ++++++++++---------
+ vsi_cam/v4l2/gdc_drv.c             | 21 +++++++++++++--------
+ vsi_cam/v4l2/isp_drv.c             | 19 ++++++++++++-------
+ vsi_cam/v4l2/sif_drv.c             | 19 ++++++++++++-------
+ vsi_cam/v4l2/vid_drv.c             | 16 ++++++++--------
+ vsi_cam/v4l2/video.c               |  7 ++-----
+ vsi_cam/v4l2/video_m2m.c           |  7 ++-----
+ vsi_cam/v4l2/vse_drv.c             | 19 ++++++++++++-------
+ 36 files changed, 131 insertions(+), 155 deletions(-)
+
+diff --git a/cam_subsys/hobot_dev_camsys.c b/cam_subsys/hobot_dev_camsys.c
+index 9db35c1..f95faa4 100755
+--- a/cam_subsys/hobot_dev_camsys.c
++++ b/cam_subsys/hobot_dev_camsys.c
+@@ -194,9 +194,8 @@ static s32 camsys_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static s32 camsys_remove(struct platform_device *pdev)
++static void camsys_remove(struct platform_device *pdev)
+ {
+-	s32 ret = 0;
+ #if 1
+ 	struct device *dev;
+ 	dev = &pdev->dev;
+@@ -207,7 +206,7 @@ static s32 camsys_remove(struct platform_device *pdev)
+ 
+ 	if (pdev == NULL) {
+ 		vio_err("%s g_camsys_dev = NULL\n", __func__);
+-		return -EFAULT;
++		return;
+ 	}
+ 	camsys = platform_get_drvdata(pdev);
+ 	dev = &pdev->dev;
+@@ -223,7 +222,6 @@ static s32 camsys_remove(struct platform_device *pdev)
+ #endif
+ 	dev_info(dev, "%s\n", __func__);
+ 
+-	return ret;
+ }
+ 
+ #ifdef CONFIG_OF
+diff --git a/codec_node/hobot_dev_codec_node.c b/codec_node/hobot_dev_codec_node.c
+index d6a5a74..07845d1 100644
+--- a/codec_node/hobot_dev_codec_node.c
++++ b/codec_node/hobot_dev_codec_node.c
+@@ -687,15 +687,14 @@ static s32 hobot_codec_node_probe(struct platform_device *pdev)
+  * @callergraph
+  * @design
+  */
+-static s32 hobot_codec_node_remove(struct platform_device *pdev)
++static void hobot_codec_node_remove(struct platform_device *pdev)
+ {
+-	s32 ret = 0;
+ 	struct j6_codec_node_dev *codec_node;
+ 	struct device *dev;
+ 
+ 	if (pdev == NULL) {
+ 		vio_err("%s: pdev = NULL\n", __func__);
+-		return -EFAULT;
++		return;
+ 	}
+ 
+ 	dev = &pdev->dev;
+@@ -708,7 +707,6 @@ static s32 hobot_codec_node_remove(struct platform_device *pdev)
+ 
+ 	dev_info(dev, "%s\n", __func__);
+ 
+-	return ret;
+ }
+ 
+ 
+diff --git a/gdc/hobot_dev_gdc.c b/gdc/hobot_dev_gdc.c
+index 7e81e0f..da81077 100755
+--- a/gdc/hobot_dev_gdc.c
++++ b/gdc/hobot_dev_gdc.c
+@@ -744,15 +744,14 @@ static s32 hobot_gdc_probe(struct platform_device *pdev)
+ * @callergraph
+ * @design
+ */
+-static s32 hobot_gdc_remove(struct platform_device *pdev)
++static void hobot_gdc_remove(struct platform_device *pdev)
+ {
+-	s32 ret = 0;
+ 	struct hobot_gdc_dev *gdc;
+ 	struct device *dev;
+ 
+ 	if (pdev == NULL) {
+ 		vio_err("%s: pdev = NULL\n", __func__);
+-		return -EFAULT;
++		return;
+ 	}
+ 	gdc = (struct hobot_gdc_dev *)platform_get_drvdata(pdev);
+ 	dev = &pdev->dev;
+@@ -766,7 +765,6 @@ static s32 hobot_gdc_remove(struct platform_device *pdev)
+ 
+ 	dev_info(dev, "%s\n", __func__);
+ 
+-	return ret;
+ }
+ 
+ /**
+diff --git a/lpwm/hobot_lpwm_dev.c b/lpwm/hobot_lpwm_dev.c
+index 918a202..cceac1d 100644
+--- a/lpwm/hobot_lpwm_dev.c
++++ b/lpwm/hobot_lpwm_dev.c
+@@ -230,7 +230,6 @@ static const struct pwm_ops pwm_lite_ops = {
+ 	.request = hobot_lpwm_request,
+ 	.free	 = hobot_lpwm_free,
+ 	.apply	 = hobot_lpwm_apply,
+-	.owner	 = THIS_MODULE,
+ };
+ 
+ /**
+@@ -311,17 +310,17 @@ static int32_t lpwm_platform_init(struct platform_device *pdev, struct hobot_lpw
+ 		return PTR_ERR(lpwm_priv->syscon);
+ 	}
+ 
+-	hrtimer_init(&lpwm->swtrigger_timer, CLOCK_MONOTONIC,
+-		     HRTIMER_MODE_REL | HRTIMER_MODE_PINNED);
+-	lpwm->swtrigger_timer.function = swtig_timer_func;
++	hrtimer_setup(&lpwm->swtrigger_timer, swtig_timer_func, CLOCK_MONOTONIC,
++		      HRTIMER_MODE_REL | HRTIMER_MODE_PINNED);
+ 
+ 	osal_mutex_init(&lpwm->con_lock);
+ 	lpwm->priv = lpwm_priv;
+ 	lpwm->utype = INIT_STATE;
+-	lpwm->chip.dev = &pdev->dev;
+-	lpwm->chip.ops = &pwm_lite_ops;
+-	lpwm->chip.npwm = LPWM_CNUM;
+-	lpwm->chip.base = -1;
++	lpwm->chip = devm_pwmchip_alloc(&pdev->dev, LPWM_CNUM, 0);
++	if (IS_ERR(lpwm->chip))
++		return PTR_ERR(lpwm->chip);
++	lpwm->chip->ops = &pwm_lite_ops;
++	pwmchip_set_drvdata(lpwm->chip, lpwm);
+ 
+ 	return ret;
+ }
+@@ -464,7 +463,6 @@ static const struct file_operations lpwm_cdev_ops = {
+ 
+ static struct class hobot_lpwm_class = {
+ 	.name = "hobot-lpwm",
+-	.owner = THIS_MODULE,
+ };
+ 
+ static int lpwm_chip_cdev_create(struct hobot_lpwm_ins *lpwm)
+@@ -482,7 +480,7 @@ static int lpwm_chip_cdev_create(struct hobot_lpwm_ins *lpwm)
+ 	memset(lpwm_cdev, 0, sizeof(struct lpwm_chip_cdev));
+ 
+ 	lpwm_cdev->lpwm = lpwm;
+-	lpwm_cdev->dev = lpwm->chip.dev;
++	lpwm_cdev->dev = pwmchip_parent(lpwm->chip);
+ 	snprintf(lpwm_cdev->name, sizeof(lpwm_cdev->name),
+ 		 "%s%d", LPWM_NAME, lpwm->dev_idx);
+ 
+@@ -590,7 +588,7 @@ static int32_t hobot_lpwm_probe(struct platform_device *pdev)
+ 		goto err_disable_clk;
+ 	}
+ 
+-	ret = pwmchip_add(&lpwm->chip);
++	ret = pwmchip_add(lpwm->chip);
+ 	if (ret < 0) {
+ 		lpwm_err(lpwm, "Add to Linux pwm chip failed!\n");
+ 		goto err_free_irq;
+@@ -620,7 +618,7 @@ static int32_t hobot_lpwm_probe(struct platform_device *pdev)
+ 	return ret;
+ 
+ err_free_pwm_chip:
+-	pwmchip_remove(&lpwm->chip);
++	pwmchip_remove(lpwm->chip);
+ err_free_irq:
+ 	devm_free_irq(&pdev->dev, lpwm->irq, lpwm);
+ err_disable_clk:
+@@ -680,7 +678,7 @@ static void lpwm_kernel_remove(struct platform_device *pdev)
+ 
+ 	lpwm_sysfs_remove(pdev);
+ 	devm_free_irq(&pdev->dev, lpwm->irq, (void *)lpwm);
+-	pwmchip_remove(&lpwm->chip);
++	pwmchip_remove(lpwm->chip);
+ 	lpwm_chip_cdev_remove(lpwm);
+ 
+ 	clk_disable_unprepare(lpwm->sclk);
+@@ -704,9 +702,8 @@ static void lpwm_kernel_remove(struct platform_device *pdev)
+  * @callergraph
+  * @design
+  */
+-static int32_t hobot_lpwm_remove(struct platform_device *pdev)
++static void hobot_lpwm_remove(struct platform_device *pdev)
+ {
+-	int32_t ret = LPWM_RET_OK;
+ 	struct hobot_lpwm_ins *lpwm =
+ 		(struct hobot_lpwm_ins *)platform_get_drvdata(pdev);
+ 
+@@ -716,7 +713,6 @@ static int32_t hobot_lpwm_remove(struct platform_device *pdev)
+ 	lpwm_info(lpwm, "Remove success\n");
+ 	osal_kfree(lpwm);
+ 
+-	return ret;
+ }
+ 
+ static const struct of_device_id hobot_lpwm_dt_ids[] = {
+diff --git a/lpwm/hobot_lpwm_dev.h b/lpwm/hobot_lpwm_dev.h
+index d8ef03b..839847d 100644
+--- a/lpwm/hobot_lpwm_dev.h
++++ b/lpwm/hobot_lpwm_dev.h
+@@ -84,7 +84,7 @@ struct lpwm_vs {
+  * @NO{S10E05C01}
+  */
+ struct hobot_lpwm_ins {
+-	struct pwm_chip		chip;			/**< Struct of pwm chip dev */
++	struct pwm_chip		*chip;			/**< PWM framework chip */
+ 	char			name[16];		/**< Name of lpwm */
+ 	struct clk		*sclk;			/**< Pointer of lpwm sclock */
+ 	struct clk		*pclk;			/**< Pointer of lpwm pclock */
+diff --git a/lpwm/hobot_lpwm_ops.c b/lpwm/hobot_lpwm_ops.c
+index 55ef9ba..3a4d246 100644
+--- a/lpwm/hobot_lpwm_ops.c
++++ b/lpwm/hobot_lpwm_ops.c
+@@ -736,7 +736,7 @@ int32_t lpwm_reset(struct vio_video_ctx *vctx)
+  */
+ static inline struct hobot_lpwm_ins *to_hobot_lpwm_ins(const struct pwm_chip *chip)
+ {
+-	return container_of(chip, struct hobot_lpwm_ins, chip);
++	return pwmchip_get_drvdata(chip);
+ }
+ 
+ /**
+@@ -974,7 +974,6 @@ long lpwm_chip_ioctl(struct file *pfile, unsigned int cmd, unsigned long args)
+ 	struct hobot_lpwm_cdev_config cdev_config;
+ 	struct hobot_lpwm_cdev_chg_config cdev_chg_config;
+ 	struct pwm_device *test_device;
+-	char pwm_info[24] = {0};
+ 	struct pwm_state state;
+ 
+ 	lpwm_cdev_p = pfile->private_data;
+@@ -1081,9 +1080,10 @@ long lpwm_chip_ioctl(struct file *pfile, unsigned int cmd, unsigned long args)
+ 			return -EINVAL;
+ 		}
+ 
+-		snprintf(pwm_info, sizeof(pwm_info), "lpwm_test_%d", channel_id);
+-		test_device = pwm_request(channel_id, pwm_info);
+-		if (IS_ERR(test_device)) {
++		test_device = &lpwm_ins_ptr(INS_ID(channel_id))->chip->pwms[COR_ID(channel_id)];
++		ret = hobot_lpwm_request(lpwm_ins_ptr(INS_ID(channel_id))->chip,
++					 test_device);
++		if (ret) {
+ 			lpwm_err(lpwm, "PWM request fail\n");
+ 			return -ENODEV;
+ 		}
+@@ -1105,7 +1105,8 @@ long lpwm_chip_ioctl(struct file *pfile, unsigned int cmd, unsigned long args)
+ 			lpwm_err(lpwm, "gpwm_dev null\n");
+ 			return -EINVAL;
+ 		}
+-		pwm_free(gpwm_dev[channel_id]);
++		hobot_lpwm_free(lpwm_ins_ptr(INS_ID(channel_id))->chip,
++				gpwm_dev[channel_id]);
+ 		gpwm_dev[channel_id] = NULL;
+ 	}
+ 	break;
+@@ -1129,7 +1130,7 @@ long lpwm_chip_ioctl(struct file *pfile, unsigned int cmd, unsigned long args)
+ 			return -EINVAL;
+ 		}
+ 
+-		ret = pwm_apply_state(gpwm_dev[cdev_config.channel_id], &state);
++		ret = pwm_apply_might_sleep(gpwm_dev[cdev_config.channel_id], &state);
+ 		if (ret < 0) {
+ 			lpwm_err(lpwm, "apply state failed\n");
+ 			return -EINVAL;
+diff --git a/mipi/hobot_mipi_debug.c b/mipi/hobot_mipi_debug.c
+index 1c15c9e..ae96abb 100644
+--- a/mipi/hobot_mipi_debug.c
++++ b/mipi/hobot_mipi_debug.c
+@@ -161,7 +161,7 @@ static void *hobot_mipi_csi_class_get(void)
+ 		return g_cdbg.csi_class;
+ 
+ 	if (g_cdbg.p_class == NULL) {
+-		p_class = class_create(THIS_MODULE, cname);
++		p_class = class_create(cname);
+ 		if (IS_ERR((void *)p_class)) {
+ 			p_class = NULL;
+ 			mipi_err(NULL, "[%s] class %s error %d\n", __func__,
+diff --git a/mipi/hobot_mipi_host.c b/mipi/hobot_mipi_host.c
+index 37b7094..4f3f37b 100644
+--- a/mipi/hobot_mipi_host.c
++++ b/mipi/hobot_mipi_host.c
+@@ -277,7 +277,7 @@ static irqreturn_t mipi_host_irq_func(int32_t this_irq, void *data)
+  * @callergraph
+  * @design
+  */
+-static int32_t hobot_mipi_host_remove(struct platform_device *pdev)
++static void hobot_mipi_host_remove(struct platform_device *pdev)
+ {
+ 	struct mipi_hdev_s *hdev = (struct mipi_hdev_s *)platform_get_drvdata(pdev);
+ 	struct mipi_host_s *host = &hdev->host;
+@@ -299,7 +299,6 @@ static int32_t hobot_mipi_host_remove(struct platform_device *pdev)
+ 	hobot_mipi_host_remove_do(hdev);
+ 	devm_kfree(&pdev->dev, (void *)hdev);
+ 	platform_set_drvdata(pdev, NULL);
+-	return 0;
+ }
+ 
+ /**
+@@ -729,4 +728,3 @@ int32_t hobot_mipi_host_setup(const struct mipi_sub_ops_s **rx_ops)
+ 
+ 	return ret;
+ }
+-
+diff --git a/mipi/hobot_mipi_host_cdev.c b/mipi/hobot_mipi_host_cdev.c
+index 41f99dc..0af8adf 100755
+--- a/mipi/hobot_mipi_host_cdev.c
++++ b/mipi/hobot_mipi_host_cdev.c
+@@ -514,7 +514,7 @@ static int32_t hobot_mipi_host_class_get(void)
+ 			ret = -ENODEV;
+ 		}
+ #else
+-		g_mh_class = class_create(THIS_MODULE, MIPI_HOST_DNAME);
++		g_mh_class = class_create(MIPI_HOST_DNAME);
+ 		if (IS_ERR((void *)g_mh_class)) {
+ 			ret = (int32_t)PTR_ERR((void *)g_mh_class);
+ 			g_mh_class = NULL;
+diff --git a/mipi/hobot_mipi_phy.c b/mipi/hobot_mipi_phy.c
+index 732b4fd..0a476f2 100755
+--- a/mipi/hobot_mipi_phy.c
++++ b/mipi/hobot_mipi_phy.c
+@@ -215,7 +215,7 @@ EXPORT_SYMBOL_GPL(hobot_mipi_phy_debug_setup); /* PRQA S 0307 */ /* EXPORT_SYMBO
+  * @callergraph
+  * @design
+  */
+-static int32_t hobot_mipi_phy_remove(struct platform_device *pdev)
++static void hobot_mipi_phy_remove(struct platform_device *pdev)
+ {
+ 	struct mipi_pdev_s *p_pdev = (struct mipi_pdev_s *)platform_get_drvdata(pdev);
+ 	struct mipi_dphy_s *dphy = &p_pdev->dphy;
+@@ -239,7 +239,6 @@ static int32_t hobot_mipi_phy_remove(struct platform_device *pdev)
+ 	hobot_mipi_phy_remove_do(p_pdev);
+ 	devm_kfree(&pdev->dev, (void *)p_pdev);
+ 	platform_set_drvdata(pdev, NULL);
+-	return 0;
+ }
+ 
+ static void hobot_mipi_phy_probe_res(struct platform_device *pdev, struct mipi_pdev_s *p_pdev)
+@@ -388,4 +387,3 @@ module_exit(hobot_mipi_phy_module_exit); /* PRQA S 0605 */ /* module_exit macro
+ MODULE_LICENSE("GPL"); /* PRQA S ALL */ /* linux macro */
+ MODULE_AUTHOR("Lan Mingang <mingang.lan@horizon.ai>"); /* PRQA S ALL */ /* linux macro */
+ MODULE_DESCRIPTION("HOBOT MIPI DPHY Driver"); /* PRQA S ALL */ /* linux macro */
+-
+diff --git a/osd/Makefile b/osd/Makefile
+index 7a08024..b5f4292 100644
+--- a/osd/Makefile
++++ b/osd/Makefile
+@@ -7,6 +7,7 @@ ccflags-y += -I$(srctree)/drivers/media/platform/horizon/camsys/vsi_cam/native
+ obj-$(CONFIG_HOBOT_OSD) += hobot_osd.o
+ # obj-m += hobot_osd.o
+ hobot_osd-objs := hobot_osd_dev.o hobot_osd_process.o hobot_osd_mem.o hobot_osd_ops.o
++CFLAGS_REMOVE_hobot_osd_process.o += $(CC_FLAGS_NO_FPU)
+ 
+ ccflags-y += -D _LINUX_KERNEL_MODE
+ 
+diff --git a/osd/hobot_osd_dev.c b/osd/hobot_osd_dev.c
+index bec7250..65979ab 100644
+--- a/osd/hobot_osd_dev.c
++++ b/osd/hobot_osd_dev.c
+@@ -349,7 +349,7 @@ static int32_t osd_device_node_init(struct osd_dev *osd)
+ 		goto err;
+ 	}
+ 
+-	osd->class = class_create(THIS_MODULE, OSD_NAM);
++	osd->class = class_create(OSD_NAM);
+ 	dev = device_create(osd->class, NULL, MKDEV(MAJOR(osd->devno), 0), NULL, OSD_NAM);
+ 	if (IS_ERR(dev)) {
+ 		ret = -EINVAL;
+@@ -589,9 +589,8 @@ _exit_create_file:
+ 	return ret;
+ }
+ 
+-static int32_t hobot_osd_remove(struct platform_device *pdev)
++static void hobot_osd_remove(struct platform_device *pdev)
+ {
+-	int32_t ret = 0;
+ 	struct osd_dev *osd;
+ 
+ 	BUG_ON(!pdev);
+@@ -613,7 +612,6 @@ static int32_t hobot_osd_remove(struct platform_device *pdev)
+ 
+ 	osd_info("done\n");
+ 
+-	return ret;
+ }
+ 
+ #ifdef CONFIG_OF
+diff --git a/sensor/src/camera_i2c.c b/sensor/src/camera_i2c.c
+index 938fb33..e575d05 100755
+--- a/sensor/src/camera_i2c.c
++++ b/sensor/src/camera_i2c.c
+@@ -29,10 +29,10 @@
+ /* #include "inc/camera_subdev.h" */
+ /* #include "inc/camera_i2c.h" */
+ 
+-static int match_i2c_client_by_addr(struct device *dev, void *data)
++static int match_i2c_client_by_addr(struct device *dev, const void *data)
+ {
+ 	struct i2c_client *client = to_i2c_client(dev);
+-	u32 *addr = data;
++	const u32 *addr = data;
+ 
+ 	if (dev->type == &i2c_client_type && client->addr == *addr) {
+ 		return 1;  // find it
+diff --git a/sensor/src/camera_subdev.c b/sensor/src/camera_subdev.c
+index 430e288..f8f79b7 100755
+--- a/sensor/src/camera_subdev.c
++++ b/sensor/src/camera_subdev.c
+@@ -540,7 +540,8 @@ int32_t common_get_param(uint32_t chn, struct _setting_param_t *user_para)
+ 	user_para->active_height = (uint16_t)sensor_param[chn].active_height;
+ 	user_para->fps = sensor_param[chn].fps;
+ 	user_para->data_width = (uint8_t)sensor_param[chn].data_width;
+-	user_para->bayer_start = (bayer_start_u)sensor_param[chn].bayer_start;/*PRQA S 4342*/
++	user_para->bayer_start.rggb =
++		(bayer_rggb_start_e)sensor_param[chn].bayer_start;/*PRQA S 4342*/
+ 	user_para->bayer_pattern = (bayer_pattern_e)sensor_param[chn].bayer_pattern;/*PRQA S 4342*/
+ 	user_para->exposure_max_bit_width = (uint8_t)sensor_param[chn].exposure_max_bit_width;
+ 	user_para->exposure_time_step = (uint8_t)sensor_param[chn].exposure_time_step;
+diff --git a/vcon/hobot_vin_vcon_dev.c b/vcon/hobot_vin_vcon_dev.c
+index 64718ea..7a68beb 100644
+--- a/vcon/hobot_vin_vcon_dev.c
++++ b/vcon/hobot_vin_vcon_dev.c
+@@ -297,13 +297,12 @@ static int32_t hobot_vin_vcon_probe(struct platform_device *pdev)
+  * @callergraph
+  * @design
+  */
+-static int32_t hobot_vin_vcon_remove(struct platform_device *pdev)
++static void hobot_vin_vcon_remove(struct platform_device *pdev)
+ {
+ 	struct vcon_device_s *vcon = (struct vcon_device_s *)platform_get_drvdata(pdev);
+ 
+ 	hobot_vin_vcon_probe_free(pdev, vcon);
+ 
+-	return 0;
+ }
+ 
+ 
+diff --git a/vin_node/hobot_dev_vin_node.c b/vin_node/hobot_dev_vin_node.c
+index 503247b..ca33f80 100755
+--- a/vin_node/hobot_dev_vin_node.c
++++ b/vin_node/hobot_dev_vin_node.c
+@@ -880,7 +880,7 @@ s32 vin_allow_bind(struct vio_subdev *vdev, struct vio_subdev *remote_vdev, u8 o
+ 
+ #ifdef HOBOT_MCU_CAMSYS
+ #else
+-struct class* vin_node_get_class(void)
++const struct class *vin_node_get_class(void)
+ {
+ 	if (g_vin_node_dev[0] != NULL)
+ 		return g_vin_node_dev[0]->vps_device[SRC_INDEX].dev.class;
+@@ -1095,15 +1095,14 @@ static s32 hobot_vin_node_probe(struct platform_device *pdev)
+  * @callergraph
+  * @design
+  */
+-static s32 hobot_vin_node_remove(struct platform_device *pdev)
++static void hobot_vin_node_remove(struct platform_device *pdev)
+ {
+-	s32 ret = 0;
+ 	struct j6_vin_node_dev *vin_node;
+ 	struct device *dev;
+ 
+ 	if (pdev == NULL) {
+ 		vio_err("%s: pdev = NULL\n", __func__);
+-		return -EFAULT;
++		return;
+ 	}
+ 
+ 	dev = &pdev->dev;
+@@ -1111,7 +1110,6 @@ static s32 hobot_vin_node_remove(struct platform_device *pdev)
+ 
+ 	devm_kfree(dev, (void *)vin_node);
+ 	dev_info(dev, "%s\n", __func__);
+-	return ret;
+ }
+ 
+ 
+@@ -1272,4 +1270,3 @@ MODULE_AUTHOR("Wang Fenfen<fenfen.wang@horizon.com>");
+ MODULE_DESCRIPTION("J6 VIN_NODE driver");
+ MODULE_LICENSE("GPL");
+ #endif
+-
+diff --git a/vin_node/hobot_dev_vin_node.h b/vin_node/hobot_dev_vin_node.h
+index bcf0c27..3b72ce0 100755
+--- a/vin_node/hobot_dev_vin_node.h
++++ b/vin_node/hobot_dev_vin_node.h
+@@ -227,7 +227,7 @@ void vin_node_device_node_deinit(u8 hw_id);
+ s32 vin_device_node_init(u32 hw_id, void *cim);
+ s32 vin_device_node_deinit(u32 hw_id);
+ void vin_unregister_device_node(vin_type_e type);
+-struct class* vin_node_get_class(void);
++const struct class *vin_node_get_class(void);
+ u32 vin_get_perline_size(u32 width, u8 pack_mode, u32 format);
+ 
+ #endif /*HOBOT_DEV_VIN_NODE_H*/
+diff --git a/vpf/hobot_vpf_manager.c b/vpf/hobot_vpf_manager.c
+index ba15a91..acb6a68 100755
+--- a/vpf/hobot_vpf_manager.c
++++ b/vpf/hobot_vpf_manager.c
+@@ -552,7 +552,7 @@ static s32 hobot_vpf_device_node_init(struct hobot_vpf_dev *vpf_dev)
+ 		return ret;
+ 	}
+ 
+-	vpf_dev->class = class_create(THIS_MODULE, VPS_NAME);
++	vpf_dev->class = class_create(VPS_NAME);
+ 	dev = device_create(vpf_dev->class, NULL, MKDEV(MAJOR(vpf_dev->devno), 0), NULL, name);
+ 	if (IS_ERR((void *)dev)) {
+ 		class_destroy(vpf_dev->class);
+diff --git a/vsi_cam/base/cam_ctrl.c b/vsi_cam/base/cam_ctrl.c
+index e2c5149..abed2e6 100644
+--- a/vsi_cam/base/cam_ctrl.c
++++ b/vsi_cam/base/cam_ctrl.c
+@@ -149,10 +149,9 @@ static int cam_ctrl_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int cam_ctrl_remove(struct platform_device *pdev)
++static void cam_ctrl_remove(struct platform_device *pdev)
+ {
+ 	devm_kfree(&pdev->dev, platform_get_drvdata(pdev));
+-	return 0;
+ }
+ 
+ static const struct of_device_id cam_ctrl_of_match[] = {
+diff --git a/vsi_cam/base/cam_pulse.c b/vsi_cam/base/cam_pulse.c
+index c8f7631..5f69f12 100644
+--- a/vsi_cam/base/cam_pulse.c
++++ b/vsi_cam/base/cam_pulse.c
+@@ -163,10 +163,9 @@ static int cam_pulse_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int cam_pulse_remove(struct platform_device *pdev)
++static void cam_pulse_remove(struct platform_device *pdev)
+ {
+ 	devm_kfree(&pdev->dev, platform_get_drvdata(pdev));
+-	return 0;
+ }
+ 
+ static const struct of_device_id cam_pulse_of_match[] = {
+diff --git a/vsi_cam/base/dw_crc.c b/vsi_cam/base/dw_crc.c
+index 46cf0cd..8019f7f 100644
+--- a/vsi_cam/base/dw_crc.c
++++ b/vsi_cam/base/dw_crc.c
+@@ -133,14 +133,13 @@ static int dw_crc_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int dw_crc_remove(struct platform_device *pdev)
++static void dw_crc_remove(struct platform_device *pdev)
+ {
+ 	struct dw_crc_device *crc = platform_get_drvdata(pdev);
+ 
+ 	if (crc)
+ 		mutex_destroy(&crc->lock);
+ 	devm_kfree(&pdev->dev, crc);
+-	return 0;
+ }
+ 
+ static const struct of_device_id dw_crc_of_match[] = {
+diff --git a/vsi_cam/csi/csi_wrapper.c b/vsi_cam/csi/csi_wrapper.c
+index 28d8dfa..fcfa906 100644
+--- a/vsi_cam/csi/csi_wrapper.c
++++ b/vsi_cam/csi/csi_wrapper.c
+@@ -375,10 +375,9 @@ static int csiw_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int csiw_remove(struct platform_device *pdev)
++static void csiw_remove(struct platform_device *pdev)
+ {
+ 	devm_kfree(&pdev->dev, platform_get_drvdata(pdev));
+-	return 0;
+ }
+ 
+ static const struct of_device_id csiw_of_match[] = {
+diff --git a/vsi_cam/isc/ion_mem_helper.c b/vsi_cam/isc/ion_mem_helper.c
+index 13f62bb..c716a6d 100644
+--- a/vsi_cam/isc/ion_mem_helper.c
++++ b/vsi_cam/isc/ion_mem_helper.c
+@@ -250,13 +250,7 @@ int mem_iommu_map(struct device *dev, phys_addr_t phys_addr, size_t size,
+ 	start = phys & dma_get_mask(dev);
+ 	len = PAGE_ALIGN(size);
+ 	dev_dbg(dev, "mapping phys:%#llx(%#lx)\n", phys, len);
+-	if (iommu->iommu.ops &&
+-	    iommu->iommu.ops->default_domain_ops &&
+-	    iommu->iommu.ops->default_domain_ops->map)
+-		rc = iommu->iommu.ops->default_domain_ops->map
+-				(domain, start, phys, len, prot, GFP_KERNEL);
+-	else
+-		rc = -EINVAL;
++	rc = iommu_map(domain, start, phys, len, prot, GFP_KERNEL);
+ 	if (rc < 0) {
+ 		dev_err(dev, "iommu map failed (err=%d)\n", rc);
+ 		return rc;
+@@ -280,7 +274,6 @@ int mem_iommu_unmap(struct device *dev, phys_addr_t iova, size_t size)
+ 	size_t len;
+ 	struct lite_mmu_iommu *iommu = dev_iommu_priv_get(dev);
+ 	struct iommu_domain *domain;
+-	struct iommu_iotlb_gather iotlb_gather;
+ 	dma_addr_t start;
+ 	int rc;
+ 
+@@ -296,17 +289,9 @@ int mem_iommu_unmap(struct device *dev, phys_addr_t iova, size_t size)
+ 	domain = iommu->domain;
+ 	start = (dma_addr_t)iova;
+ 	len = PAGE_ALIGN(size);
+-	iommu_iotlb_gather_init(&iotlb_gather);
+-	if (iommu->iommu.ops &&
+-	    iommu->iommu.ops->default_domain_ops &&
+-	    iommu->iommu.ops->default_domain_ops->unmap)
+-		rc = iommu->iommu.ops->default_domain_ops->unmap
+-				(domain, start, len, &iotlb_gather);
+-	else
+-		rc = -EINVAL;
++	rc = iommu_unmap(domain, start, len) == len ? 0 : -EINVAL;
+ 	if (rc < 0)
+ 		dev_err(dev, "iommu unmap failed (err=%d)\n", rc);
+-	iommu_iotlb_sync(domain, &iotlb_gather);
+ 	return rc;
+ }
+ EXPORT_SYMBOL(mem_iommu_unmap);
+diff --git a/vsi_cam/isc/isc.c b/vsi_cam/isc/isc.c
+index 3b647db..7db5f89 100644
+--- a/vsi_cam/isc/isc.c
++++ b/vsi_cam/isc/isc.c
+@@ -1041,7 +1041,7 @@ static int __init isc_init(void)
+ 	if (rc < 0)
+ 		goto _alloc_err;
+ 
+-	class = class_create(THIS_MODULE, ISC_DEV_NAME);
++	class = class_create(ISC_DEV_NAME);
+ 	if (IS_ERR(class)) {
+ 		rc = PTR_ERR(class);
+ 		goto _create_err;
+diff --git a/vsi_cam/native/isp/isp_drv.c b/vsi_cam/native/isp/isp_drv.c
+index c3608c0..c066943 100644
+--- a/vsi_cam/native/isp/isp_drv.c
++++ b/vsi_cam/native/isp/isp_drv.c
+@@ -1406,7 +1406,7 @@ static int isp_nat_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int isp_nat_remove(struct platform_device *pdev)
++static void isp_nat_remove(struct platform_device *pdev)
+ {
+ 	struct isp_nat_device *nat_dev = platform_get_drvdata(pdev);
+ 	struct device *dev = &pdev->dev;
+@@ -1420,7 +1420,7 @@ static int isp_nat_remove(struct platform_device *pdev)
+ 	rc = isp_remove(pdev, &nat_dev->isp_dev);
+ 	if (rc < 0) {
+ 		dev_err(dev, "failed to call isp_remove (err=%d)\n", rc);
+-		return rc;
++		return;
+ 	}
+ 	mutex_destroy(&nat_dev->stream_vnodes_lock);
+ 
+@@ -1431,7 +1431,6 @@ static int isp_nat_remove(struct platform_device *pdev)
+ 	devm_kfree(dev, nat_dev);
+ 
+ 	dev_dbg(dev, "VS ISP driver (native) removed\n");
+-	return 0;
+ }
+ 
+ static const struct dev_pm_ops isp_pm_ops = {
+diff --git a/vsi_cam/native/sif/hobot_dev_cim.c b/vsi_cam/native/sif/hobot_dev_cim.c
+index 19edf45..f4a74a9 100644
+--- a/vsi_cam/native/sif/hobot_dev_cim.c
++++ b/vsi_cam/native/sif/hobot_dev_cim.c
+@@ -1030,7 +1030,7 @@ static s32 cim_probe(struct platform_device *pdev)
+  * @callergraph
+  * @design
+  */
+-static s32 cim_remove(struct platform_device *pdev)
++static void cim_remove(struct platform_device *pdev)
+ {
+ 	s32 ret = 0;
+ 	struct j6_cim_dev *cim;
+@@ -1038,7 +1038,7 @@ static s32 cim_remove(struct platform_device *pdev)
+ 
+ 	if (pdev == NULL) {
+ 		vio_err("%s failed\n", __func__);
+-		return -EFAULT;
++		return;
+ 	}
+ 
+ 	dev = &pdev->dev;
+@@ -1051,7 +1051,7 @@ static s32 cim_remove(struct platform_device *pdev)
+ 	ret = sif_remove(pdev, &cim->sif);
+ 	if (ret < 0) {
+ 		vio_err("%s sif remove failed\n", __func__);
+-		return -EFAULT;
++		return;
+ 	}
+ 
+ 	device_remove_file(dev, &dev_attr_regdump);
+@@ -1070,7 +1070,6 @@ static s32 cim_remove(struct platform_device *pdev)
+ 	g_cim_dev[cim->hw_id] = NULL;
+ 	devm_kfree(dev, (void *)cim);
+ 	dev_info(dev, "%s\n", __func__);
+-	return ret;
+ }
+ 
+ /**
+diff --git a/vsi_cam/native/vse/vse_drv.c b/vsi_cam/native/vse/vse_drv.c
+index 92c9084..b8a57c2 100644
+--- a/vsi_cam/native/vse/vse_drv.c
++++ b/vsi_cam/native/vse/vse_drv.c
+@@ -1176,7 +1176,7 @@ static int vse_nat_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int vse_nat_remove(struct platform_device *pdev)
++static void vse_nat_remove(struct platform_device *pdev)
+ {
+ 	struct vse_nat_device *nat_dev = platform_get_drvdata(pdev);
+ 	struct device *dev = &pdev->dev;
+@@ -1190,7 +1190,7 @@ static int vse_nat_remove(struct platform_device *pdev)
+ 	rc = vse_remove(pdev, &nat_dev->vse_dev);
+ 	if (rc < 0) {
+ 		dev_err(dev, "failed to call vse_remove (err=%d)\n", rc);
+-		return rc;
++		return;
+ 	}
+ 
+ 	device_remove_file(dev, &dev_attr_stat);
+@@ -1200,7 +1200,6 @@ static int vse_nat_remove(struct platform_device *pdev)
+ 	devm_kfree(dev, nat_dev);
+ 
+ 	dev_dbg(dev, "VS VSE driver (native) removed\n");
+-	return 0;
+ }
+ 
+ static const struct dev_pm_ops vse_pm_ops = {
+diff --git a/vsi_cam/v4l2/cam_buf.c b/vsi_cam/v4l2/cam_buf.c
+index 4744a09..96981b0 100644
+--- a/vsi_cam/v4l2/cam_buf.c
++++ b/vsi_cam/v4l2/cam_buf.c
+@@ -105,7 +105,7 @@ static struct local_buf_ctx *create_local_buf_ctx(struct init_attr *attr,
+ 		ctx->queue.io_modes = VB2_MMAP;
+ 		ctx->queue.mem_ops = &vb2_dma_contig_memops;
+ 		ctx->queue.buf_struct_size = sizeof(struct cam_buf);
+-		ctx->queue.min_buffers_needed = 2;
++		ctx->queue.min_queued_buffers = 2;
+ 		ctx->queue.timestamp_flags = V4L2_BUF_FLAG_TIMESTAMP_MONOTONIC;
+ 		ctx->queue.lock = &ctx->lock;
+ 		ctx->queue.dev = attr->dev;
+@@ -158,7 +158,7 @@ int cam_reqbufs(struct cam_ctx *ctx, unsigned int num,
+ 		return rc;
+ 
+ 	for (i = 0; i < num; i++) {
+-		rc = vb2_core_qbuf(&lbc->queue, i, NULL, NULL);
++		rc = vb2_core_qbuf(&lbc->queue, lbc->queue.bufs[i], NULL, NULL);
+ 		if (rc < 0)
+ 			goto _err;
+ 	}
+diff --git a/vsi_cam/v4l2/csi_drv.c b/vsi_cam/v4l2/csi_drv.c
+index 89d92c6..bf72d94 100644
+--- a/vsi_cam/v4l2/csi_drv.c
++++ b/vsi_cam/v4l2/csi_drv.c
+@@ -64,6 +64,7 @@ static int csi_s_stream(struct v4l2_subdev *sd, int enable)
+ }
+ 
+ static int csi_g_frame_interval(struct v4l2_subdev *sd,
++				struct v4l2_subdev_state *state,
+ 				struct v4l2_subdev_frame_interval *fiv)
+ {
+ 	struct csi_v4l_instance *csi = sd_to_v4l_instance(csi, sd);
+@@ -75,10 +76,11 @@ static int csi_g_frame_interval(struct v4l2_subdev *sd,
+ 		return -ENOLINK;
+ 
+ 	fiv->pad = rpad->index;
+-	return v4l2_subdev_call(rsd, video, g_frame_interval, fiv);
++	return v4l2_subdev_call(rsd, pad, get_frame_interval, NULL, fiv);
+ }
+ 
+ static int csi_s_frame_interval(struct v4l2_subdev *sd,
++				struct v4l2_subdev_state *state,
+ 				struct v4l2_subdev_frame_interval *fiv)
+ {
+ 	struct csi_v4l_instance *csi = sd_to_v4l_instance(csi, sd);
+@@ -90,7 +92,7 @@ static int csi_s_frame_interval(struct v4l2_subdev *sd,
+ 		return -ENOLINK;
+ 
+ 	fiv->pad = rpad->index;
+-	return v4l2_subdev_call(rsd, video, s_frame_interval, fiv);
++	return v4l2_subdev_call(rsd, pad, set_frame_interval, NULL, fiv);
+ }
+ 
+ static void csi_subirq_callback(struct csi_device *csi_dev, u32 sub_val,
+@@ -399,7 +401,7 @@ static int csi_g_sensor_ctrl(struct v4l2_subdev *sd, void *arg)
+ 			case V4L2_CID_FPS:
+ 				struct v4l2_subdev_frame_interval fi = {0};
+ 
+-				v4l2_subdev_call(rsd, video, g_frame_interval, &fi);
++				v4l2_subdev_call(rsd, pad, get_frame_interval, NULL, &fi);
+ 				uint32_t fps = (uint32_t)fi.interval.denominator / (uint32_t)fi.interval.numerator;
+ 				memcpy(ctrl->ctrl_data, &fps, sizeof(fps));
+ 				break;
+@@ -561,11 +563,11 @@ static const struct v4l2_subdev_core_ops csi_core_ops = {
+ 
+ static const struct v4l2_subdev_video_ops csi_video_ops = {
+ 	.s_stream = csi_s_stream,
+-	.g_frame_interval = csi_g_frame_interval,
+-	.s_frame_interval = csi_s_frame_interval,
+ };
+ 
+ static const struct v4l2_subdev_pad_ops csi_pad_ops = {
++	.get_frame_interval = csi_g_frame_interval,
++	.set_frame_interval = csi_s_frame_interval,
+ 	.set_fmt = csi_set_fmt,
+ 	.get_fmt = csi_get_fmt,
+ 	.enum_mbus_code = csi_enum_mbus_code,
+@@ -825,7 +827,7 @@ static int csi_v4l_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int csi_v4l_remove(struct platform_device *pdev)
++static void csi_v4l_remove(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct csi_v4l_device *v4l_dev = platform_get_drvdata(pdev);
+@@ -843,18 +845,17 @@ static int csi_v4l_remove(struct platform_device *pdev)
+ 	rc = csi_remove(pdev, &v4l_dev->csi_dev);
+ 	if (rc < 0) {
+ 		dev_err(dev, "failed to call csi_remove (err=%d)\n", rc);
+-		return rc;
++		return;
+ 	}
+ 
+ 	rc = csi_runtime_suspend(dev);
+ 	if (rc) {
+ 		dev_err(dev, "failed to call csi_runtime_suspend (err=%d)\n", rc);
+-		return rc;
++		return;
+ 	}
+ 	devm_kfree(dev, v4l_dev);
+ 
+ 	dev_dbg(dev, "VS CSI driver (v4l) removed\n");
+-	return 0;
+ }
+ 
+ static const struct dev_pm_ops csi_pm_ops = {
+diff --git a/vsi_cam/v4l2/gdc_drv.c b/vsi_cam/v4l2/gdc_drv.c
+index b34dc09..dd89bdd 100644
+--- a/vsi_cam/v4l2/gdc_drv.c
++++ b/vsi_cam/v4l2/gdc_drv.c
+@@ -469,6 +469,7 @@ static int gdc_s_stream(struct v4l2_subdev *sd, int enable)
+ }
+ 
+ static int gdc_g_frame_interval(struct v4l2_subdev *sd,
++				struct v4l2_subdev_state *state,
+ 				struct v4l2_subdev_frame_interval *fiv)
+ {
+ 	struct gdc_v4l_instance *gdc = sd_to_v4l_instance(gdc, sd);
+@@ -481,10 +482,11 @@ static int gdc_g_frame_interval(struct v4l2_subdev *sd,
+ 
+ 	fiv->pad = rpad->index;
+ 
+-	return v4l2_subdev_call(rsd, video, g_frame_interval, fiv);
++	return v4l2_subdev_call(rsd, pad, get_frame_interval, NULL, fiv);
+ }
+ 
+ static int gdc_s_frame_interval(struct v4l2_subdev *sd,
++				struct v4l2_subdev_state *state,
+ 				struct v4l2_subdev_frame_interval *fiv)
+ {
+ 	struct gdc_v4l_instance *gdc = sd_to_v4l_instance(gdc, sd);
+@@ -497,7 +499,7 @@ static int gdc_s_frame_interval(struct v4l2_subdev *sd,
+ 
+ 	fiv->pad = rpad->index;
+ 
+-	return v4l2_subdev_call(rsd, video, s_frame_interval, fiv);
++	return v4l2_subdev_call(rsd, pad, set_frame_interval, NULL, fiv);
+ }
+ 
+ static int gdc_re_set_format(struct gdc_v4l_instance *inst, struct gdc_format *fmt)
+@@ -688,13 +690,17 @@ static const struct v4l2_subdev_core_ops gdc_core_ops = {
+ 
+ static const struct v4l2_subdev_video_ops gdc_video_ops = {
+ 	.s_stream = gdc_s_stream,
+-	.g_frame_interval = gdc_g_frame_interval,
+-	.s_frame_interval = gdc_s_frame_interval,
++};
++
++static const struct v4l2_subdev_pad_ops gdc_pad_ops = {
++	.get_frame_interval = gdc_g_frame_interval,
++	.set_frame_interval = gdc_s_frame_interval,
+ };
+ 
+ static const struct v4l2_subdev_ops gdc_subdev_ops = {
+ 	.core = &gdc_core_ops,
+ 	.video = &gdc_video_ops,
++	.pad = &gdc_pad_ops,
+ };
+ 
+ static int gdc_v4l_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
+@@ -873,7 +879,7 @@ static int gdc_v4l_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int gdc_v4l_remove(struct platform_device *pdev)
++static void gdc_v4l_remove(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct gdc_device *gdc_dev = platform_get_drvdata(pdev);
+@@ -895,18 +901,17 @@ static int gdc_v4l_remove(struct platform_device *pdev)
+ 	rc = gdc_remove(pdev, &v4l_dev->gdc_dev);
+ 	if (rc < 0) {
+ 		dev_err(dev, "failed to call gdc_remove (err=%d)\n", rc);
+-		return rc;
++		return;
+ 	}
+ 
+ 	rc = gdc_runtime_suspend(dev);
+ 	if (rc) {
+ 		dev_err(dev, "failed to call gdc_runtime_suspend (err=%d)\n", rc);
+-		return rc;
++		return;
+ 	}
+ 	devm_kfree(dev, v4l_dev);
+ 
+ 	dev_dbg(dev, "ARM GDC driver (v4l) removed\n");
+-	return 0;
+ }
+ 
+ static const struct dev_pm_ops gdc_pm_ops = {
+diff --git a/vsi_cam/v4l2/isp_drv.c b/vsi_cam/v4l2/isp_drv.c
+index dd7176a..0056cbc 100644
+--- a/vsi_cam/v4l2/isp_drv.c
++++ b/vsi_cam/v4l2/isp_drv.c
+@@ -844,6 +844,7 @@ static int isp_s_stream(struct v4l2_subdev *sd, int enable)
+ }
+ 
+ static int isp_g_frame_interval(struct v4l2_subdev *sd,
++				struct v4l2_subdev_state *state,
+ 				struct v4l2_subdev_frame_interval *fiv)
+ {
+ 	struct isp_v4l_instance *isp = sd_to_v4l_instance(isp, sd);
+@@ -856,10 +857,11 @@ static int isp_g_frame_interval(struct v4l2_subdev *sd,
+ 
+ 	fiv->pad = rpad->index;
+ 
+-	return v4l2_subdev_call(rsd, video, g_frame_interval, fiv);
++	return v4l2_subdev_call(rsd, pad, get_frame_interval, NULL, fiv);
+ }
+ 
+ static int isp_s_frame_interval(struct v4l2_subdev *sd,
++				struct v4l2_subdev_state *state,
+ 				struct v4l2_subdev_frame_interval *fiv)
+ {
+ 	struct isp_v4l_instance *isp = sd_to_v4l_instance(isp, sd);
+@@ -872,7 +874,7 @@ static int isp_s_frame_interval(struct v4l2_subdev *sd,
+ 
+ 	fiv->pad = rpad->index;
+ 
+-	return v4l2_subdev_call(rsd, video, s_frame_interval, fiv);
++	return v4l2_subdev_call(rsd, pad, set_frame_interval, NULL, fiv);
+ }
+ 
+ static const struct v4l2_subdev_core_ops isp_core_ops = {
+@@ -881,12 +883,16 @@ static const struct v4l2_subdev_core_ops isp_core_ops = {
+ 
+ static const struct v4l2_subdev_video_ops isp_video_ops = {
+ 	.s_stream = isp_s_stream,
+-	.g_frame_interval = isp_g_frame_interval,
+-	.s_frame_interval = isp_s_frame_interval,
++};
++
++static const struct v4l2_subdev_pad_ops isp_pad_ops = {
++	.get_frame_interval = isp_g_frame_interval,
++	.set_frame_interval = isp_s_frame_interval,
+ };
+ 
+ static const struct v4l2_subdev_ops isp_subdev_ops = {
+ 	.video = &isp_video_ops,
++	.pad = &isp_pad_ops,
+ 	.core = &isp_core_ops,
+ };
+ 
+@@ -1101,7 +1107,7 @@ static int isp_v4l_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int isp_v4l_remove(struct platform_device *pdev)
++static void isp_v4l_remove(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct isp_device *isp_dev = platform_get_drvdata(pdev);
+@@ -1125,7 +1131,7 @@ static int isp_v4l_remove(struct platform_device *pdev)
+ 	rc = isp_remove(pdev, &v4l_dev->isp_dev);
+ 	if (rc < 0) {
+ 		dev_err(dev, "failed to call isp_remove (err=%d)\n", rc);
+-		return rc;
++		return;
+ 	}
+ 
+ #ifdef CONFIG_DEBUG_FS
+@@ -1134,7 +1140,6 @@ static int isp_v4l_remove(struct platform_device *pdev)
+ 	devm_kfree(dev, v4l_dev);
+ 
+ 	dev_dbg(dev, "VS ISP driver (v4l) removed\n");
+-	return 0;
+ }
+ 
+ static const struct dev_pm_ops isp_pm_ops = {
+diff --git a/vsi_cam/v4l2/sif_drv.c b/vsi_cam/v4l2/sif_drv.c
+index bd539ee..cdf2aaf 100644
+--- a/vsi_cam/v4l2/sif_drv.c
++++ b/vsi_cam/v4l2/sif_drv.c
+@@ -404,6 +404,7 @@ static int sif_s_stream(struct v4l2_subdev *sd, int enable)
+ }
+ 
+ static int sif_g_frame_interval(struct v4l2_subdev *sd,
++				struct v4l2_subdev_state *state,
+ 				struct v4l2_subdev_frame_interval *fiv)
+ {
+ 	struct sif_v4l_instance *inst = sd_to_v4l_instance(sif, sd);
+@@ -416,10 +417,11 @@ static int sif_g_frame_interval(struct v4l2_subdev *sd,
+ 
+ 	fiv->pad = rpad->index;
+ 
+-	return v4l2_subdev_call(rsd, video, g_frame_interval, fiv);
++	return v4l2_subdev_call(rsd, pad, get_frame_interval, NULL, fiv);
+ }
+ 
+ static int sif_s_frame_interval(struct v4l2_subdev *sd,
++				struct v4l2_subdev_state *state,
+ 				struct v4l2_subdev_frame_interval *fiv)
+ {
+ 	struct sif_v4l_instance *inst = sd_to_v4l_instance(sif, sd);
+@@ -432,7 +434,7 @@ static int sif_s_frame_interval(struct v4l2_subdev *sd,
+ 
+ 	fiv->pad = rpad->index;
+ 
+-	return v4l2_subdev_call(rsd, video, s_frame_interval, fiv);
++	return v4l2_subdev_call(rsd, pad, set_frame_interval, NULL, fiv);
+ }
+ 
+ static long sif_command(struct v4l2_subdev *sd, unsigned int cmd, void *arg)
+@@ -446,13 +448,17 @@ static const struct v4l2_subdev_core_ops sif_core_ops = {
+ 
+ static const struct v4l2_subdev_video_ops sif_video_ops = {
+ 	.s_stream = sif_s_stream,
+-	.g_frame_interval = sif_g_frame_interval,
+-	.s_frame_interval = sif_s_frame_interval,
++};
++
++static const struct v4l2_subdev_pad_ops sif_pad_ops = {
++	.get_frame_interval = sif_g_frame_interval,
++	.set_frame_interval = sif_s_frame_interval,
+ };
+ 
+ static const struct v4l2_subdev_ops sif_subdev_ops = {
+ 	.core = &sif_core_ops,
+ 	.video = &sif_video_ops,
++	.pad = &sif_pad_ops,
+ };
+ 
+ static int sif_v4l_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
+@@ -640,7 +646,7 @@ static int sif_v4l_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int sif_v4l_remove(struct platform_device *pdev)
++static void sif_v4l_remove(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct sif_v4l_device *v4l_dev = platform_get_drvdata(pdev);
+@@ -658,11 +664,10 @@ static int sif_v4l_remove(struct platform_device *pdev)
+ 	rc = sif_remove(pdev, &v4l_dev->sif_dev);
+ 	if (rc < 0) {
+ 		dev_err(dev, "failed to call sif_remove (err=%d)\n", rc);
+-		return rc;
++		return;
+ 	}
+ 
+ 	dev_dbg(dev, "VS SIF driver (v4l) removed\n");
+-	return 0;
+ }
+ 
+ static const struct dev_pm_ops sif_pm_ops = {
+diff --git a/vsi_cam/v4l2/vid_drv.c b/vsi_cam/v4l2/vid_drv.c
+index a41e58c..84e71be 100644
+--- a/vsi_cam/v4l2/vid_drv.c
++++ b/vsi_cam/v4l2/vid_drv.c
+@@ -53,7 +53,7 @@ static int init_subdev_list(struct device *dev,
+ 			    struct v4l2_async_notifier *notifier)
+ {
+ 	struct device_node *node = NULL, *sensor_node = NULL;
+-	struct v4l2_async_subdev *asd;
++	struct v4l2_async_connection *asd;
+ 	struct i2c_client *i2c_dev;
+ 	char * const sd_names[] = {
+ 		ISP_DT_NAME,
+@@ -75,7 +75,7 @@ static int init_subdev_list(struct device *dev,
+ 
+ 			asd = v4l2_async_nf_add_fwnode(notifier,
+ 						       of_fwnode_handle(node),
+-						       struct v4l2_async_subdev);
++						       struct v4l2_async_connection);
+ 			if (IS_ERR(asd))
+ 				return PTR_ERR(asd);
+ 
+@@ -93,7 +93,7 @@ static int init_subdev_list(struct device *dev,
+ 
+ 				asd = v4l2_async_nf_add_fwnode(notifier,
+ 						       of_fwnode_handle(sensor_node),
+-						       struct v4l2_async_subdev);
++						       struct v4l2_async_connection);
+ 				if (IS_ERR(asd))
+ 					return PTR_ERR(asd);
+ 
+@@ -115,7 +115,8 @@ static const struct media_device_ops vid_mdev_ops = {
+ };
+ 
+ static int sd_async_notifier_bound(struct v4l2_async_notifier *notifier,
+-				   struct v4l2_subdev *sd, struct v4l2_async_subdev *asd)
++				   struct v4l2_subdev *sd,
++				   struct v4l2_async_connection *asc)
+ {
+ 	if (sd->entity.function == MEDIA_ENT_F_CAM_SENSOR)
+ 		return 0;
+@@ -187,14 +188,14 @@ static int vid_probe(struct platform_device *pdev)
+ 		return rc;
+ 	vdev->mdev = mdev;
+ 
+-	v4l2_async_nf_init(&vid_dev->sd_notifier);
++	v4l2_async_nf_init(&vid_dev->sd_notifier, vdev);
+ 	vid_dev->sd_notifier.ops = &sd_async_notifier_ops;
+ 
+ 	rc = init_subdev_list(dev, &vid_dev->sd_notifier);
+ 	if (rc < 0)
+ 		return rc;
+ 
+-	rc = v4l2_async_nf_register(vdev, &vid_dev->sd_notifier);
++	rc = v4l2_async_nf_register(&vid_dev->sd_notifier);
+ 	if (rc < 0)
+ 		return rc;
+ 
+@@ -203,7 +204,7 @@ static int vid_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int vid_remove(struct platform_device *pdev)
++static void vid_remove(struct platform_device *pdev)
+ {
+ 	struct vid_device *vid_dev = platform_get_drvdata(pdev);
+ 	struct device *dev = &pdev->dev;
+@@ -216,7 +217,6 @@ static int vid_remove(struct platform_device *pdev)
+ 	media_device_cleanup(&vid_dev->mdev);
+ 	devm_kfree(dev, vid_dev);
+ 	dev_dbg(dev, "VS video driver (v4l) removed\n");
+-	return 0;
+ }
+ 
+ static void vid_dev_release(struct device *dev)
+diff --git a/vsi_cam/v4l2/video.c b/vsi_cam/v4l2/video.c
+index 4335813..7a147ed 100644
+--- a/vsi_cam/v4l2/video.c
++++ b/vsi_cam/v4l2/video.c
+@@ -345,7 +345,7 @@ static int vid_s_fmt(struct file *file, void *fh, struct v4l2_format *f)
+ 
+ 	if (vb2_is_busy(&vdev->queue)) {
+ 		pr_warn("%s num_buffers of vdev queue is not 0 (%d)\n",
+-			__func__, vdev->queue.num_buffers);
++			__func__, vb2_get_num_buffers(&vdev->queue));
+ 		return -EBUSY;
+ 	}
+ 
+@@ -623,11 +623,8 @@ static const struct v4l2_ioctl_ops vid_ioctl_ops = {
+ 	.vidioc_enum_input = vid_enum_input,
+ 	.vidioc_s_input = vid_s_input,
+ 	.vidioc_g_input = vid_g_input,
+-	.vidioc_s_ctrl = vid_s_ctrl,
+-	.vidioc_g_ctrl = vid_g_ctrl,
+ 	.vidioc_s_ext_ctrls = vid_s_ext_ctrls,
+ 	.vidioc_g_ext_ctrls = vid_g_ext_ctrls,
+-	.vidioc_queryctrl = vid_queryctrl,
+ 	.vidioc_query_ext_ctrl = vid_query_ext_ctrl,
+ };
+ 
+@@ -736,7 +733,7 @@ static struct vid_video_device *create_video_device(struct vid_device *vdev,
+ 	v->queue.io_modes = VB2_MMAP | VB2_DMABUF | VB2_USERPTR;
+ 	v->queue.mem_ops = &vb2_dma_contig_memops;
+ 	v->queue.buf_struct_size = sizeof(struct cam_buf);
+-	v->queue.min_buffers_needed = 2;
++	v->queue.min_queued_buffers = 2;
+ 	v->queue.timestamp_flags = V4L2_BUF_FLAG_TIMESTAMP_MONOTONIC;
+ 	v->queue.lock = &v->lock;
+ 	v->queue.dev = dev;
+diff --git a/vsi_cam/v4l2/video_m2m.c b/vsi_cam/v4l2/video_m2m.c
+index 11cfa47..54cf5d8 100644
+--- a/vsi_cam/v4l2/video_m2m.c
++++ b/vsi_cam/v4l2/video_m2m.c
+@@ -568,11 +568,8 @@ static const struct v4l2_ioctl_ops vid_m2m_ioctl_ops = {
+ 	.vidioc_expbuf = v4l2_m2m_ioctl_expbuf,
+ 	.vidioc_streamon = v4l2_m2m_ioctl_streamon,
+ 	.vidioc_streamoff = v4l2_m2m_ioctl_streamoff,
+-	.vidioc_s_ctrl = vid_s_ctrl,
+-	.vidioc_g_ctrl = vid_g_ctrl,
+ 	.vidioc_s_ext_ctrls = vid_s_ext_ctrls,
+ 	.vidioc_g_ext_ctrls = vid_g_ext_ctrls,
+-	.vidioc_queryctrl = vid_queryctrl,
+ 	.vidioc_query_ext_ctrl = vid_query_ext_ctrl,
+ };
+ 
+@@ -818,7 +815,7 @@ static int vid_m2m_open(struct file *file)
+ 	ctx->dev = dev;
+ 	ctx->fh.m2m_ctx = dev->m2m_ctx;
+ 
+-	v4l2_fh_add(&ctx->fh);
++	v4l2_fh_add(&ctx->fh, file);
+ 	dev_dbg(dev->dev, "created instance: %p, m2m_ctx: %p\n",
+ 		ctx, ctx->fh.m2m_ctx);
+ 
+@@ -866,7 +863,7 @@ static int vid_m2m_release(struct file *file)
+ 		out_vq->owner = NULL;
+ 	}
+ 
+-	v4l2_fh_del(&ctx->fh);
++	v4l2_fh_del(&ctx->fh, file);
+ 	v4l2_fh_exit(&ctx->fh);
+ 	devm_kfree(ctx->dev->dev, ctx);
+ 
+diff --git a/vsi_cam/v4l2/vse_drv.c b/vsi_cam/v4l2/vse_drv.c
+index 7518592..66abfb3 100644
+--- a/vsi_cam/v4l2/vse_drv.c
++++ b/vsi_cam/v4l2/vse_drv.c
+@@ -657,6 +657,7 @@ static int vse_s_stream(struct v4l2_subdev *sd, int enable)
+ }
+ 
+ static int vse_g_frame_interval(struct v4l2_subdev *sd,
++				struct v4l2_subdev_state *state,
+ 				struct v4l2_subdev_frame_interval *fiv)
+ {
+ 	struct vse_v4l_instance *vse = sd_to_v4l_instance(vse, sd);
+@@ -669,10 +670,11 @@ static int vse_g_frame_interval(struct v4l2_subdev *sd,
+ 
+ 	fiv->pad = rpad->index;
+ 
+-	return v4l2_subdev_call(rsd, video, g_frame_interval, fiv);
++	return v4l2_subdev_call(rsd, pad, get_frame_interval, NULL, fiv);
+ }
+ 
+ static int vse_s_frame_interval(struct v4l2_subdev *sd,
++				struct v4l2_subdev_state *state,
+ 				struct v4l2_subdev_frame_interval *fiv)
+ {
+ 	struct vse_v4l_instance *vse = sd_to_v4l_instance(vse, sd);
+@@ -685,7 +687,7 @@ static int vse_s_frame_interval(struct v4l2_subdev *sd,
+ 
+ 	fiv->pad = rpad->index;
+ 
+-	return v4l2_subdev_call(rsd, video, s_frame_interval, fiv);
++	return v4l2_subdev_call(rsd, pad, set_frame_interval, NULL, fiv);
+ }
+ 
+ static void vse_get_cur_attr(struct vse_instance *ins, int chnl, vse_ochn_attr_ex_t *vse_attr)
+@@ -851,13 +853,17 @@ static const struct v4l2_subdev_core_ops vse_core_ops = {
+ 
+ static const struct v4l2_subdev_video_ops vse_video_ops = {
+ 	.s_stream = vse_s_stream,
+-	.g_frame_interval = vse_g_frame_interval,
+-	.s_frame_interval = vse_s_frame_interval,
++};
++
++static const struct v4l2_subdev_pad_ops vse_pad_ops = {
++	.get_frame_interval = vse_g_frame_interval,
++	.set_frame_interval = vse_s_frame_interval,
+ };
+ 
+ static const struct v4l2_subdev_ops vse_subdev_ops = {
+ 	.core = &vse_core_ops,
+ 	.video = &vse_video_ops,
++	.pad = &vse_pad_ops,
+ };
+ 
+ static int vse_v4l_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
+@@ -1070,7 +1076,7 @@ static int vse_v4l_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static int vse_v4l_remove(struct platform_device *pdev)
++static void vse_v4l_remove(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct vse_v4l_device *v4l_dev = platform_get_drvdata(pdev);
+@@ -1095,7 +1101,7 @@ static int vse_v4l_remove(struct platform_device *pdev)
+ 	rc = vse_remove(pdev, &v4l_dev->vse_dev);
+ 	if (rc < 0) {
+ 		dev_err(dev, "failed to call vse_remove (err=%d)\n", rc);
+-		return rc;
++		return;
+ 	}
+ 
+ #ifdef CONFIG_DEBUG_FS
+@@ -1104,7 +1110,6 @@ static int vse_v4l_remove(struct platform_device *pdev)
+ 	devm_kfree(dev, v4l_dev);
+ 
+ 	dev_dbg(dev, "VS VSE driver (v4l) removed\n");
+-	return 0;
+ }
+ 
+ static const struct dev_pm_ops vse_pm_ops = {

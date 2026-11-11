@@ -1,0 +1,26 @@
+From: Codex <codex@openai.com>
+Subject: [PATCH] remoteproc: hobot: add vendor IPC header search paths
+
+The Hobot remoteproc driver consumes the shared-memory IPC interface and
+the GUA audio IPC wrapper, but its Makefile does not expose either header
+directory.  Enabling HOBOT_REMOTEPROC therefore fails at the first include.
+
+Use srctree-relative paths so both in-tree and O= builds resolve the vendor
+headers without relying on an absolute build-machine path.
+---
+ drivers/remoteproc/Makefile | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/remoteproc/Makefile b/drivers/remoteproc/Makefile
+index 62ba7e234..51bd8fede 100644
+--- a/drivers/remoteproc/Makefile
++++ b/drivers/remoteproc/Makefile
+@@ -41,3 +41,6 @@ obj-$(CONFIG_TI_K3_M4_REMOTEPROC)	+= ti_k3_m4_remoteproc.o ti_k3_common.o
+ obj-$(CONFIG_TI_K3_R5_REMOTEPROC)	+= ti_k3_r5_remoteproc.o ti_k3_common.o
+ obj-$(CONFIG_XLNX_R5_REMOTEPROC)	+= xlnx_r5_remoteproc.o
++ccflags-$(CONFIG_HOBOT_REMOTEPROC) += -I$(srctree)/drivers/mailbox/hobot/ipc/common
++ccflags-$(CONFIG_HOBOT_REMOTEPROC) += -I$(srctree)/sound/soc/gua
++
+ obj-$(CONFIG_HOBOT_REMOTEPROC) += hobot_remoteproc.o
+-- 
+2.51.0

@@ -1,0 +1,87 @@
+From: Codex <codex@openai.com>
+Subject: [PATCH] sound: gua: reject PCM open until audio IPC is ready
+
+The GUA card is registered before IPC instance 0 is configured. Desktop audio
+enumeration then opens every PCM and lets the driver continue into its RPC
+path, producing an unbounded error loop when the audio DSP endpoint is absent.
+
+Fail startup with -ENODEV until the endpoint is ready. Also rate-limit the
+three readiness diagnostics so repeated userspace probing cannot flood the
+console. Physical ALSA cards remain available while the DSP-backed card is
+offline.
+
+---
+ drivers/mailbox/hobot/ipc/common/hb_ipc.c  | 2 +-
+ drivers/mailbox/hobot/ipc/common/ipc_shm.c | 2 +-
+ drivers/mailbox/hobot/ipc/os/kernel/ipc_os.h | 2 ++
+ sound/soc/gua/gua-cpu-dai.c                | 7 +++++++
+ sound/soc/gua/ipc_wrapper.c                | 2 +-
+ 5 files changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/mailbox/hobot/ipc/common/hb_ipc.c b/drivers/mailbox/hobot/ipc/common/hb_ipc.c
+--- a/drivers/mailbox/hobot/ipc/common/hb_ipc.c
++++ b/drivers/mailbox/hobot/ipc/common/hb_ipc.c
+@@ -308,7 +308,7 @@ int32_t hb_ipc_is_remote_ready(int32_t instance)
+ 	if (err == -EAGAIN) {
+ 		ipc_dbg("instance %d no ready\n", instance);
+ 	} else if (err != 0) {
+-		ipc_err("instance %d is invalid\n", instance);
++		ipc_err_ratelimited("instance %d is invalid\n", instance);
+ 	} else {
+ 		ipc_dbg("instance %d is ready\n", instance);
+ 	}
+diff --git a/drivers/mailbox/hobot/ipc/common/ipc_shm.c b/drivers/mailbox/hobot/ipc/common/ipc_shm.c
+--- a/drivers/mailbox/hobot/ipc/common/ipc_shm.c
++++ b/drivers/mailbox/hobot/ipc/common/ipc_shm.c
+@@ -968,7 +968,7 @@ int32_t ipc_shm_is_remote_ready(int32_t instance)
+ 
+ 	/* check if instance is used */
+ 	if (ipc_instance_is_free(instance) != IPC_SHM_INSTANCE_USED) {
+-		ipc_err("instance %d is unused\n", instance);
++		ipc_err_ratelimited("instance %d is unused\n", instance);
+ 
+ 		return -EINVAL;
+ 	}
+diff --git a/drivers/mailbox/hobot/ipc/os/kernel/ipc_os.h b/drivers/mailbox/hobot/ipc/os/kernel/ipc_os.h
+--- a/drivers/mailbox/hobot/ipc/os/kernel/ipc_os.h
++++ b/drivers/mailbox/hobot/ipc/os/kernel/ipc_os.h
+@@ -35,6 +35,8 @@
+ /* convenience wrappers for printing errors and debug messages */
+ #define ipc_fmt(fmt)			"ipc-drv: %s() [%d]: "fmt
+ #define ipc_err(fmt, ...)		pr_err(ipc_fmt(fmt), __func__, __LINE__, ##__VA_ARGS__)
++#define ipc_err_ratelimited(fmt, ...)	\
++	pr_err_ratelimited(ipc_fmt(fmt), __func__, __LINE__, ##__VA_ARGS__)
+ #define ipc_dbg(fmt, ...)		pr_debug(ipc_fmt(fmt), __func__, __LINE__, ##__VA_ARGS__)
+ 
+ #ifndef BIT
+diff --git a/sound/soc/gua/gua-cpu-dai.c b/sound/soc/gua/gua-cpu-dai.c
+--- a/sound/soc/gua/gua-cpu-dai.c
++++ b/sound/soc/gua/gua-cpu-dai.c
+@@ -42,6 +42,13 @@ static const struct snd_pcm_hw_constraint_list gua_rpmsg_rate_constraints = {
+ static int gua_dai_startup(struct snd_pcm_substream *substream, struct snd_soc_dai *cpu_dai)
+ {
+ 	int ret;
++
++	ret = hb_ipc_is_remote_ready(AUDIO_HBIPC_INSTANCE_ID_0);
++	if (ret) {
++		dev_err_ratelimited(cpu_dai->dev,
++			"audio IPC instance 0 is not ready: %d\n", ret);
++		return -ENODEV;
++	}
+ 
+ 	ret = snd_pcm_hw_constraint_list(substream->runtime, 0,
+ 			SNDRV_PCM_HW_PARAM_RATE, &gua_rpmsg_rate_constraints);
+diff --git a/sound/soc/gua/ipc_wrapper.c b/sound/soc/gua/ipc_wrapper.c
+--- a/sound/soc/gua/ipc_wrapper.c
++++ b/sound/soc/gua/ipc_wrapper.c
+@@ -73,7 +73,7 @@ static int audio_msg_send(audio_poster_t *au_poster, uint8_t *payload, uint32_t
+ 	// 	return -EFAULT;
+ 	// }
+ 	if (hb_ipc_is_remote_ready(AUDIO_HBIPC_INSTANCE_ID_0)) {
+-		dev_err(NULL, "AUDIO[%s][%d] : HB-IPC instance(%d) disconnected!\n", __func__, __LINE__, AUDIO_HBIPC_INSTANCE_ID_0);
++		dev_err_ratelimited(NULL, "AUDIO[%s][%d] : HB-IPC instance(%d) disconnected!\n", __func__, __LINE__, AUDIO_HBIPC_INSTANCE_ID_0);
+ 		return -1;
+ 	}
+ 
+-- 
+2.39.5

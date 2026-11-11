@@ -1,0 +1,2 @@
+vermagic=6.18.0 SMP preempt mod_unload aarch64
+kernel/fs/ext4/ext4.ko

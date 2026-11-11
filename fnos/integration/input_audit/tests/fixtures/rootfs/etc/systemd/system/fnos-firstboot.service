@@ -1,0 +1,9 @@
+[Unit]
+Description=fnOS first boot resize
+After=local-fs.target
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/fnos-resize-root
+ExecStartPost=/usr/sbin/fnos-update-boot
+[Install]
+WantedBy=multi-user.target

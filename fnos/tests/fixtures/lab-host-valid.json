@@ -1,0 +1,77 @@
+{
+  "schema": "fnos-lab-fixture/v1",
+  "simulated": true,
+  "host": {
+    "tools": [
+      {"name": "diskutil", "path": "/usr/sbin/diskutil"},
+      {"name": "python3", "path": "/usr/bin/python3"}
+    ],
+    "serial_ports": ["/dev/cu.usbserial-1340"]
+  },
+  "disks": [
+    {
+      "device": "/dev/disk0",
+      "size_bytes": 1000204886016,
+      "model": "APPLE SSD AP1024Z",
+      "serial": "SYSTEM-INTERNAL",
+      "bus": "PCI-Express",
+      "internal": true,
+      "system_disk": true,
+      "whole_disk": true,
+      "mount_points": ["/"]
+    },
+    {
+      "device": "/dev/disk4",
+      "size_bytes": 31293702144,
+      "model": "USB 3.0 SSD",
+      "serial": "X5TEST0001",
+      "bus": "USB",
+      "internal": false,
+      "removable": true,
+      "whole_disk": true,
+      "mount_points": []
+    },
+    {
+      "device": "/dev/disk5",
+      "size_bytes": 1000204886016,
+      "model": "USB Data HDD",
+      "serial": "DATA-1TB",
+      "bus": "USB",
+      "internal": false,
+      "removable": true,
+      "whole_disk": true,
+      "mount_points": []
+    }
+  ],
+  "boards": {
+    "x5-lab-01": {
+      "board_id": "x5-lab-01",
+      "model": "RDK X5",
+      "power": {
+        "backend": "simulated-cp5",
+        "channel": "s1",
+        "mapping_verified": true,
+        "wired": true
+      },
+      "serial": {
+        "port": "/dev/cu.usbserial-1340",
+        "baud": 115200
+      },
+      "allowed_target_serials": ["X5TEST0001"]
+    },
+    "x5-lab-unbound": {
+      "board_id": "x5-lab-unbound",
+      "model": "RDK X5",
+      "power": {
+        "backend": "simulated-cp5",
+        "channel": "",
+        "mapping_verified": false,
+        "wired": false
+      },
+      "serial": {
+        "port": "/dev/cu.usbserial-1340",
+        "baud": 115200
+      }
+    }
+  }
+}
