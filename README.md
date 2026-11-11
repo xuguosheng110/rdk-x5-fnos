@@ -25,7 +25,7 @@
 
 **RDK X5 × fnOS** 是面向 RDK X5 的飞牛 fnOS ARM 社区适配项目。项目补充启动、网络、存储及 BPU / VPU 适配，让开发板可以运行飞牛的 Web 桌面、应用中心、相册和影视服务，用于家庭文件共享、照片整理与影音播放。
 
-> **版本状态**：当前公开版本为 **v0.1.0 家庭共享版**；`main` 已包含 v0.2.0 存储修复进展，Release 尚在准备中。可下载文件以 [Releases](https://github.com/xuguosheng110/rdk-x5-fnos/releases) 为准。
+> **版本说明**：[v0.2.0](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.2.0) 提供适配源码与存储修复资料；已公开的完整系统镜像见 [v0.1.0 家庭共享版](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.1.0)。内核归档及下载说明以对应 Release 页面为准。
 
 ## 已验证功能
 
@@ -47,7 +47,7 @@
 - **已验证**：Linux 6.18.0 #5 在原测试系统上通过 120 GB U 盘 Basic / Btrfs 创建、读写及冷启动复挂校验；r16 完整镜像通过烧录回读、首启和已有 Basic 卷导入。
 - **待验证**：全新 r16 系统的空白盘新建卷、双盘 ext4 RAID1 与真实超时故障注入。早期 16 GB U 盘持续读写掉线的原因仍待定位。
 
-详见 [修复说明](RELEASE_NOTES.md) 与 [存储测试记录](docs/storage-create-validation.md)。发布包是否可下载，以正式 Release 的实际附件为准。
+详见 [修复说明](RELEASE_NOTES.md) 与 [存储测试记录](docs/storage-create-validation.md)；下载材料与内核归档状态见 [v0.2.0 Release](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.2.0)。
 
 ## 下载与安装
 
@@ -56,7 +56,7 @@
 | 用途 | 入口 | 内容 |
 | --- | --- | --- |
 | **体验公开镜像** | [v0.1.0 家庭共享版](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.1.0) | Release 正文提供完整镜像的百度网盘入口；GitHub 附件提供源码与校验资料。 |
-| **参与适配与构建** | [当前源码](https://github.com/xuguosheng110/rdk-x5-fnos/tree/main) · [组装文档](fnos/integration/image_assembly/README.md) | `main` 包含 v0.2.0 存储修复；完整系统还需同版本 fnOS ARM 用户态、RDK BSP、厂商运行库与模型。 |
+| **参与适配与构建** | [v0.2.0 源码发布](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.2.0) · [组装文档](fnos/integration/image_assembly/README.md) | 适配源码与存储修复补丁；内核归档获取方式见 Release。构建还需同版本 fnOS ARM 用户态、RDK BSP、厂商运行库与模型。 |
 
 **源码 ZIP 不能直接烧录。** 以下步骤适用于完整系统镜像；当前公开的 v0.1.0 镜像不包含后续 v0.2.0 存储修复。第三方组件的使用范围见 [许可说明](THIRD_PARTY.md)。
 
