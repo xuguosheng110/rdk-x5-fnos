@@ -15,9 +15,8 @@
 
 <p align="center">
   <a href="#下载与安装">下载与安装</a> ·
-  <a href="#已验证功能">功能与进展</a> ·
+  <a href="#已验证功能">功能进展</a> ·
   <a href="#日常使用与常见问题">使用帮助</a> ·
-  <a href="TODO.md">开发计划</a> ·
   <a href="https://github.com/xuguosheng110/rdk-x5-fnos/issues">问题反馈</a>
 </p>
 
@@ -53,10 +52,10 @@
 
 ### 1. 选择版本
 
-| 用途 | 入口 | 内容 |
-| --- | --- | --- |
-| **体验公开镜像** | [v0.1.0 家庭共享版](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.1.0) | Release 正文提供完整镜像的百度网盘入口；GitHub 附件提供源码与校验资料。 |
-| **参与适配与构建** | [v0.2.0 源码发布](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.2.0) · [组装文档](fnos/integration/image_assembly/README.md) | 适配源码与存储修复补丁；内核归档获取方式见 Release。构建还需同版本 fnOS ARM 用户态、RDK BSP、厂商运行库与模型。 |
+| 版本 | 内容与入口 |
+| --- | --- |
+| **镜像**<br>v0.1.0 | [下载家庭共享版](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.1.0)。Release 正文提供完整镜像的百度网盘入口；GitHub 附件提供源码与校验资料。 |
+| **源码**<br>v0.2.0 | [下载适配源码与存储修复](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.2.0)，内核归档获取方式见 Release。构建需另行准备同版本 fnOS ARM 用户态、RDK BSP、厂商运行库与模型，见 [组装文档](fnos/integration/image_assembly/README.md)。 |
 
 **源码 ZIP 不能直接烧录。** 以下步骤适用于完整系统镜像；当前公开的 v0.1.0 镜像不包含后续 v0.2.0 存储修复。第三方组件的使用范围见 [许可说明](THIRD_PARTY.md)。
 
