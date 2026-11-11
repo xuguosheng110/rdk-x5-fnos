@@ -18,12 +18,14 @@
 
 ## 下载与构建
 
-在 [v0.2.0 Release](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.2.0) 下载 `rdk-x5-fnos-v0.2.0-source.zip`、`rdk-x5-linux-6.18-storage-r16-source.tar.gz` 和 `SHA256SUMS`。附件为源码与构建材料。完整系统组装需要依法取得的 fnOS ARM 用户态及对应厂商运行库。
+从 [百度网盘](https://pan.baidu.com/s/1F5t3ehuAREo-Sy2zhoMIWw?pwd=ugjr) 下载 `rdk-x5-fnos-v0.2.0.img.xz`、对应内核源码 `rdk-x5-linux-6.18-storage-r16-source.tar.gz`、`SHA256SUMS` 和镜像安装说明。提取码 `ugjr`。从 [v0.2.0 GitHub Release](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.2.0) 获取适配源码 ZIP、校验值和真板结果。
+
+使用镜像时先校验 XZ 文件，再解压并写入 RDK X5 的系统 SD 卡。自行组装需要依法取得的 fnOS ARM 用户态及对应厂商运行库。
 
 将下载文件放在同一目录后核对校验值。内核归档中的 `kernel-build-reference/` 包含实际构建配置、编译器版本和产物哈希。源码已经包含超时恢复补丁。
 
 ```sh
-sha256sum -c SHA256SUMS
+sha256sum -c --ignore-missing SHA256SUMS
 tar -xzf rdk-x5-linux-6.18-storage-r16-source.tar.gz
 src="$PWD/fnos-storage-timeoutfix-20261111"
 out="$PWD/kernel-build"

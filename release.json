@@ -1,6 +1,6 @@
 {
   "version": "v0.2.0",
-  "distribution": "source_release",
+  "distribution": "github_source_and_baidu_full_image",
   "release_date": "2026-11-11",
   "scope": "RDK X5 USB Basic storage creation fix",
   "base_artifact": "storage-r16",
@@ -17,5 +17,12 @@
     "Fresh native storage creation on a clean r16 installation",
     "Two-drive ext4 RAID1 board test",
     "Real llbitmap timeout fault injection and intermittent 16 GB USB disconnect"
-  ]
+  ],
+  "image": {
+    "filename": "rdk-x5-fnos-v0.2.0.img.xz",
+    "bytes": 3797964212,
+    "sha256": "e114f04a2a6c9fdb1b2b4ad1cfe1a7f964b54bd797ede179cab69f874e5ec87b",
+    "uncompressed_bytes": 13157531648,
+    "uncompressed_sha256": "c7055131089a493eb12cd72f994b62781d828b13b4ace8c528636927543fc1f7"
+  }
 }
