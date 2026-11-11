@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" fill="none" role="img" aria-labelledby="title description">
+  <title id="title">RDK X5 × fnOS</title>
+  <desc id="description">Your X5. Your NAS. A community adaptation for files, photos and media, illustrated with an abstract chip and storage device.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1200" y2="300" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#111D30"/>
+      <stop offset="1" stop-color="#0B1220"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="876" y1="74" x2="1036" y2="226" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#24344B"/>
+      <stop offset="1" stop-color="#172338"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="300" rx="20" fill="url(#background)"/>
+  <path d="M648 0H650L770 300H768L648 0Z" fill="#223149"/>
+  <path d="M60 55H87" stroke="#FF9B57" stroke-width="4" stroke-linecap="round"/>
+
+  <g font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif">
+    <text x="101" y="61" fill="#B9C7DB" font-size="14" font-weight="600" letter-spacing="2.2">COMMUNITY PROJECT</text>
+    <text x="58" y="142" fill="#F6F8FC" font-size="62" font-weight="700" letter-spacing="-2">RDK X5 <tspan fill="#FF9B57">×</tspan> fnOS</text>
+    <text x="61" y="188" fill="#CED8E8" font-size="26" font-weight="400">Your X5. Your NAS.</text>
+    <text x="62" y="244" fill="#9CABC2" font-size="13" font-weight="600" letter-spacing="2.5">FILES</text>
+    <circle cx="128" cy="239" r="2" fill="#FF9B57"/>
+    <text x="148" y="244" fill="#9CABC2" font-size="13" font-weight="600" letter-spacing="2.5">PHOTOS</text>
+    <circle cx="237" cy="239" r="2" fill="#FF9B57"/>
+    <text x="257" y="244" fill="#9CABC2" font-size="13" font-weight="600" letter-spacing="2.5">MEDIA</text>
+  </g>
+
+  <g stroke="#485A73" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M811 150H876"/>
+    <path d="M1036 150H1056V103H1080"/>
+    <path d="M1056 150V197H1080"/>
+    <path d="M744 101V112M759 101V112M774 101V112M789 101V112"/>
+    <path d="M744 188V199M759 188V199M774 188V199M789 188V199"/>
+    <path d="M718 128H729M718 143H729M718 158H729M718 173H729"/>
+    <path d="M801 128H812M801 143H812M801 158H812M801 173H812"/>
+  </g>
+  <rect x="729" y="112" width="72" height="76" rx="12" fill="#1B2B41" stroke="#FF9B57" stroke-width="2"/>
+  <rect x="740" y="123" width="50" height="54" rx="6" fill="#111D30"/>
+  <text x="765" y="158" text-anchor="middle" fill="#FFBA88" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="25" font-weight="700">X5</text>
+  <circle cx="843" cy="150" r="4" fill="#FF9B57"/>
+
+  <rect x="876" y="74" width="160" height="152" rx="18" fill="url(#panel)" stroke="#51627A" stroke-width="2"/>
+  <path d="M897 104H962" stroke="#D0DAE9" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="1008" cy="104" r="4" fill="#FF9B57"/>
+  <rect x="895" y="125" width="122" height="32" rx="6" fill="#111D30" stroke="#3C506C"/>
+  <path d="M908 141H963" stroke="#687F9E" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="1001" cy="141" r="3" fill="#FFB079"/>
+  <rect x="895" y="169" width="122" height="32" rx="6" fill="#111D30" stroke="#3C506C"/>
+  <path d="M908 185H963" stroke="#687F9E" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="1001" cy="185" r="3" fill="#FFB079"/>
+
+  <rect x="1080" y="74" width="64" height="58" rx="12" fill="#18263B" stroke="#3E506C"/>
+  <g stroke="#C6D3E5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="1097" y="90" width="30" height="26" rx="4"/>
+    <circle cx="1118" cy="98" r="2.5"/>
+    <path d="M1098 110L1106 102L1115 110L1119 106L1126 113"/>
+  </g>
+  <rect x="1080" y="168" width="64" height="58" rx="12" fill="#18263B" stroke="#3E506C"/>
+  <rect x="1097" y="184" width="30" height="26" rx="5" stroke="#C6D3E5" stroke-width="2"/>
+  <path d="M1109 190L1118 197L1109 204V190Z" fill="#FFB079"/>
+</svg>
