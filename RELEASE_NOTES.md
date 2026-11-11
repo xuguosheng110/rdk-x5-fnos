@@ -6,9 +6,9 @@
 
 ## 下载
 
-GitHub：下载 `merge-image.py`，在空目录执行 `python3 merge-image.py --download`，自动下载全部 29 个小分卷并逐卷校验，再合并校验完整镜像。也可手动下载所有 `.part*` 后执行 `python3 merge-image.py`。解压 `.img.xz` 后烧录整盘镜像；分卷不可直接烧录。
+完整镜像、源码 ZIP、系统适配及烧录说明在百度网盘提供；国内下载无需分卷合并。入口将在本次发布完成前补充。
 
-百度网盘：稍后补充链接；完整包文件名为 `rdk-x5-fnos-v0.1.0.img.xz`。
+GitHub 提供源码和版本校验资料。下载镜像后按 SHA256SUMS 核验，再解压 XZ 并写入系统 SD 卡。
 
 ## 已知限制
 
