@@ -59,6 +59,11 @@ DRAM_END = 0x280000000  # 8 GiB from 0x80000000
 INITRD_MAX = 0x20000000  # 512 MiB hard ceiling for this candidate
 LIVE_UBOOT_LMB = (0x8BE990D0, 0x90000000)  # live bdinfo reserved[0]
 PRODUCT_KERNEL_OPTIONS = {
+    # fnOS mdadm requests lockless bitmaps even for single-disk Basic pools.
+    # Mounting an existing pool does not establish this creation capability.
+    'CONFIG_BLK_DEV_MD': {'y', 'm'},
+    'CONFIG_MD_LLBITMAP': {'y'},
+    'CONFIG_MD_RAID1': {'y', 'm'},
     'CONFIG_PCI': {'y'},
     'CONFIG_PROC_FS': {'y'},
     'CONFIG_NF_TABLES': {'y', 'm'},
@@ -102,7 +107,7 @@ def sha256(path: Path) -> str:
 
 
 def validate_product_kernel(config: Path) -> dict:
-    """Catch the observed sysinfo and native Docker blockers before restore."""
+    """Catch observed native storage, sysinfo and Docker blockers before restore."""
     values = dict(line.split('=', 1) for line in config.read_text().splitlines()
                   if line.startswith('CONFIG_') and '=' in line)
     missing = [name for name, allowed in PRODUCT_KERNEL_OPTIONS.items()

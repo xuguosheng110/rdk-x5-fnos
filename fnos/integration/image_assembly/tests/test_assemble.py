@@ -25,6 +25,21 @@ def base_mbr() -> bytes:
 
 
 class BootCmdTests(unittest.TestCase):
+    def test_native_mdadm_llbitmap_requirement_is_rejected_before_assembly(self):
+        # New-board native Basic creation returned EINVAL writing llbitmap.
+        # Existing-array mount tests never exercised this creation path.
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / 'config'
+            content = '\n'.join(name + '=' + ('m' if 'm' in allowed else 'y')
+                                for name, allowed in PRODUCT_KERNEL_OPTIONS.items()
+                                if name != 'CONFIG_MD_LLBITMAP')
+            config.write_text(content + '\n# CONFIG_MD_LLBITMAP is not set\n')
+            with self.assertRaisesRegex(ValueError, 'CONFIG_MD_LLBITMAP'):
+                validate_product_kernel(config)
+            with config.open('a') as out:
+                out.write('CONFIG_MD_LLBITMAP=y\n')
+            self.assertEqual(validate_product_kernel(config)['CONFIG_MD_LLBITMAP'], 'y')
+
     def test_original_docker_nft_failure_is_rejected_before_product_assembly(self):
         with tempfile.TemporaryDirectory() as directory:
             config = Path(directory) / 'config'
