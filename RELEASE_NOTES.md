@@ -15,3 +15,7 @@
 安装步骤与 TODO 见 [README.md](README.md)，真板证据见 [TESTED.md](TESTED.md)，内核来源见 [KERNEL.md](KERNEL.md)。
 
 本次公开资产为适配源码、对应 Linux 6.18 源码和校验文件。完整镜像和含第三方载荷的 FPK 待确认相应再分发许可。项目原创代码、Linux 内核与其他第三方组件各自使用其适用许可证，见 [THIRD_PARTY.md](THIRD_PARTY.md)。
+
+### 原生应用与数据放在哪里
+
+r25 真板上，飞牛原生相册和影视的程序及应用内部数据库使用系统分区。所选外置卷存放照片、视频、原生应用元数据和相册模型，独立 0.3.5 加速 FPK 的应用目录也安装到了外置卷。影视的原生安装行为见 [飞牛官方安装说明](https://help.fnnas.com/articles/v1/media/media_install)。

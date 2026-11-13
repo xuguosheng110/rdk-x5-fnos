@@ -88,7 +88,8 @@
     "original_media": "608 photos and 10 test videos preserved, file hashes match",
     "wlan_and_smb": "independent clients verified before and after reboot",
     "native_photos": "BPU face detection and FaceID128 confirmed by device descriptors and job rows",
-    "native_media": "H.264 and HEVC web transcode; hardware encode and decode both observed",
-    "standalone_fpk": "0.3.5 clean Web installation and warm reboot follow-up passed"
+    "native_media": "H.264 and HEVC web transcode; hardware encode and decode both observed; post-reboot short HEVC tail quality switch passed",
+    "standalone_fpk": "0.3.5 clean Web installation and warm reboot follow-up passed",
+    "installation_layout": "native Photos and Media programs and internal database remain on system partition; linked app metadata, AI models, original user media and standalone FPK app data use selected external volume"
   }
 }
