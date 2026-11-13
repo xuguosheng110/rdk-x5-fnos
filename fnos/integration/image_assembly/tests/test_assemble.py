@@ -25,6 +25,18 @@ def base_mbr() -> bytes:
 
 
 class BootCmdTests(unittest.TestCase):
+    def test_native_file_monitor_requires_file_handle_syscalls(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / 'config'
+            options = [f'{name}={"y" if "y" in allowed else "m"}'
+                       for name, allowed in PRODUCT_KERNEL_OPTIONS.items()
+                       if name != 'CONFIG_FHANDLE']
+            config.write_text('\n'.join(options + ['# CONFIG_FHANDLE is not set', '']))
+            with self.assertRaisesRegex(ValueError, 'CONFIG_FHANDLE'):
+                validate_product_kernel(config)
+            config.write_text('\n'.join(options + ['CONFIG_FHANDLE=y', '']))
+            self.assertEqual(validate_product_kernel(config)['CONFIG_FHANDLE'], 'y')
+
     def test_native_mdadm_llbitmap_requirement_is_rejected_before_assembly(self):
         # New-board native Basic creation returned EINVAL writing llbitmap.
         # Existing-array mount tests never exercised this creation path.

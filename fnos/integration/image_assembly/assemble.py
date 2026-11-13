@@ -66,6 +66,8 @@ PRODUCT_KERNEL_OPTIONS = {
     'CONFIG_BLK_DEV_MD': {'y', 'm'},
     'CONFIG_MD_LLBITMAP': {'y'},
     'CONFIG_MD_RAID1': {'y', 'm'},
+    # Native share discovery resolves fanotify handles with open_by_handle_at.
+    'CONFIG_FHANDLE': {'y'},
     'CONFIG_PCI': {'y'},
     'CONFIG_PROC_FS': {'y'},
     'CONFIG_NF_TABLES': {'y', 'm'},
