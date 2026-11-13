@@ -1,7 +1,7 @@
 {
   "schema": "fnos-public-source-pin/v1",
-  "tree_sha256": "50d627d5659d2d08e0736a84601455e4257ac096993ddcc028da98e792348d28",
+  "tree_sha256": "de430ffa440ead39ad4d5d30524563b8b036e8d852fc8797161a399d7181fdb6",
   "file_count": 305,
-  "bytes": 2329505,
+  "bytes": 2330072,
   "note": "SHA-256 of sorted per-file SHA-256, size and path lines; excludes this pin file"
 }
