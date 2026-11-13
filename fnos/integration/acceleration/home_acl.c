@@ -130,7 +130,7 @@ static int user_data(const char *path);
  * application-private directories keep their own defaults.
  * Linux UAPI: version 2, ACL_USER_OBJ, ACL_GROUP_OBJ, ACL_OTHER, rwx, no ID.
  */
-static void inherit_shared(int fd) {
+static int inherit_shared(int fd) {
     static const unsigned char acl[] = {
         2,0,0,0,
         1,0,7,0,255,255,255,255,
@@ -139,18 +139,19 @@ static void inherit_shared(int fd) {
     };
     struct stat s;
     char link[64], path[PATH_MAX];
-    if (fstat(fd, &s) || !S_ISDIR(s.st_mode)) return;
+    if (fstat(fd, &s) || !S_ISDIR(s.st_mode)) return 0;
     snprintf(link, sizeof(link), "/proc/self/fd/%d", fd);
     ssize_t n = readlink(link, path, sizeof(path)-1);
-    if (n < 0) return;
+    if (n < 0) return 0;
     path[n] = 0;
-    if (!user_data(path)) return;
+    if (!user_data(path)) return 0;
     /* Remote providers may not implement POSIX default ACLs. Existing native
      * access and mode handling must remain usable on those providers. */
     unsigned char current[sizeof(acl)];
     ssize_t size = fgetxattr(fd, "system.posix_acl_default", current, sizeof(current));
-    if (size != (ssize_t)sizeof(acl) || memcmp(current, acl, sizeof(acl)))
-        (void)fsetxattr(fd, "system.posix_acl_default", acl, sizeof(acl), 0);
+    if (size == (ssize_t)sizeof(acl) && !memcmp(current, acl, sizeof(acl)))
+        return 1;
+    return !fsetxattr(fd, "system.posix_acl_default", acl, sizeof(acl), 0);
 }
 
 static int ensure_shared_fd(int fd, struct stat *s) {
@@ -209,6 +210,11 @@ void *trimacl_get_fd_all(int fd, unsigned flags) {
 static int keep_shared(int fd) {
     struct stat s;
     if (!fd_home(fd, &s)) { errno = EPERM; return -1; }
+    /* A native ACL worker may run as a household user instead of the owner.
+     * Avoid requiring chmod privileges for a policy that is already applied. */
+    if (shared(&s) && !(s.st_mode & (S_ISUID | S_ISGID | S_ISVTX)) &&
+        (!S_ISDIR(s.st_mode) || inherit_shared(fd)))
+        return 0;
     mode_t mode = (s.st_mode & 0777) | (S_ISDIR(s.st_mode) ? 0777 : 0666);
     int rc = fchmod(fd, mode), saved = errno;
     if (!rc) inherit_shared(fd);

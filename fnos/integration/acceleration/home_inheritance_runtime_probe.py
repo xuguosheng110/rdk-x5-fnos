@@ -80,6 +80,19 @@ def main():
         native_access(existing)
         assert default_acl(existing)
 
+        # Team directories are created by a privileged service. The later
+        # native ACL job runs as the requesting household user.
+        assert existing.stat().st_uid == 0
+        update = (
+            'import ctypes,os;'
+            f'lib=ctypes.CDLL({str(library)!r},use_errno=True);'
+            'lib.trimacl_set_file.argtypes=[ctypes.c_char_p,ctypes.c_void_p];'
+            f'assert lib.trimacl_set_file(os.fsencode({str(existing)!r}),None)==0,ctypes.get_errno()'
+        )
+        child(1000, update, native_env)
+        assert existing.stat().st_uid == 0 and existing.stat().st_mode & 0o777 == 0o777
+        assert default_acl(existing)
+
         child(1000, 'import os;from pathlib import Path;os.umask(0o077);p=Path(' + repr(str(private)) + ');p.mkdir();(p/"private").write_text("private")', native_env)
         assert private.stat().st_mode & 0o777 == 0o700
         assert (private / 'private').stat().st_mode & 0o777 == 0o600
@@ -101,7 +114,8 @@ def main():
         child(12346, 'open(' + repr(str(restricted)) + ',"a").write("shared")', plain_env)
         print(json.dumps({'status': 'PASS', 'fresh_root_inheritance': True,
                           'unmanaged_umask_0077_cross_uid': True,
-                          'existing_shared_directory': True, 'private_metadata_preserved': True,
+                          'existing_shared_directory': True, 'non_owner_acl_reapply': True,
+                          'private_metadata_preserved': True,
                           'symlink_outside_preserved': True, 'native_explicit_mode_reconciliation': True}))
     finally:
         for path in (shared, private):
