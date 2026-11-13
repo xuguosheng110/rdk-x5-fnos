@@ -1,4 +1,4 @@
-# Linux 6.18 kernel pin (v0.3.0 draft)
+# Linux 6.18 kernel pin (v0.3.0 candidate)
 
 | Item | Value |
 | --- | --- |
@@ -9,7 +9,7 @@
 | v0.2.0 kernel source archive SHA-256 | `be478464d0ad66150bd8325858ef9f53b9f92528b88b5091ffe422f5c4d9dea3` |
 | r24 underlying build source | `fnos-storage-timeoutfix-20261111` (llbitmap timeout reference-resurrection change) |
 
-The verified v0.2.0 source archive records the exact kernel Image and config used by r16 and r24. The archive SHA-256, embedded build identity and config bytes were verified. The matching source archive can accompany the r24 candidate.
+The verified v0.2.0 source archive records the exact kernel Image and config used by r16 and r24. The archive SHA-256, embedded build identity and config bytes were verified. r25 preserves the same kernel Image and configuration. The matching source archive covers both r24 and r25.
 
 The download instructions in the [v0.2.0 release](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.2.0)
 link to the matching `rdk-x5-linux-6.18-storage-r16-source.tar.gz`. The

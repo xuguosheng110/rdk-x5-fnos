@@ -1,7 +1,7 @@
 {
   "version": "v0.3.0",
-  "status": "r25_candidate_ready_for_flash",
-  "release_date": null,
+  "status": "r25_validated_source_release",
+  "release_date": "2026-11-14",
   "base_fnos": "1.2.0701",
   "kernel": {
     "release": "6.18.0",
@@ -11,45 +11,35 @@
     "source_archive_sha256": "be478464d0ad66150bd8325858ef9f53b9f92528b88b5091ffe422f5c4d9dea3",
     "source_archive_comparison": "archive hash, embedded build identity and config verified against the reused kernel"
   },
-  "candidate_image": {
-    "filename": "fnos-x5-product-candidate-v030-r24.img",
-    "bytes": 13157531648,
-    "sha256": "45240f482e3b8d38a4cdd254ee33b4e201f091ffadf3cfebd247150a4e9da921",
-    "offline_checks": 50,
-    "accel_rows": 3690,
-    "model_config_rows": 6,
-    "native_app_rows": 40,
-    "separately_tracked_license_files": 5,
-    "archive": {
-      "filename": "rdk-x5-fnos-v0.3.0.img.xz",
-      "bytes": 2632607936,
-      "sha256": "186ac0c983632eac293af0a473e462a915349b1b2ef9a6689ca53463c490a731"
-    }
-  },
   "module": {
     "appname": "fnos-x5-accel",
-    "build_version": "0.3.4",
+    "build_version": "0.3.5",
     "public_version": "0.3.0",
-    "bytes": 1301592080,
-    "sha256": "aaf0477d6c6dcdce67596e2dc67838520b6112091f9033218f86c5e1d59718ee",
-    "native_upgrade": "0.3.3 to 0.3.4 passed on r24 via native app center",
-    "new_board_install": "passed on flashed r24",
-    "native_uninstall": "passed; original native player SHA verified",
-    "post_upgrade_reboot": "passed; installed FPK, active timer and runtime_ready"
+    "filename": "fnos-x5-accel-0.3.5-runtime.fpk",
+    "sha256": "da8fc1a064fcdea991d976fca4693bd48badd62ba9f6215845b1ab5a4b3bb2b3",
+    "bytes": 1301594067,
+    "native_upgrade": "0.3.4 to 0.3.5 passed on r24 via native app center",
+    "prior_r24_coverage": {
+      "new_board_install": "passed on flashed r24",
+      "native_uninstall": "passed; original native player SHA verified",
+      "post_upgrade_reboot": "passed; installed FPK, active timer and runtime_ready"
+    },
+    "targeted_regression_passed": 61,
+    "r25_new_board_install": "passed via native app center; runtime_ready and timer active before and after reboot"
   },
   "source": {
     "public_base_commit": "2c22437",
-    "snapshot": "r24 integration draft",
+    "snapshot": "r25 adaptation source release",
     "source_pin": "SOURCE-PIN.json",
-    "excluded": "experimental semantic diagnostics, acceptance receipts, AppleDouble metadata, private credentials/logs",
-    "overlay_hash_record": "r24-source-overlay-proof-20261113.json"
+    "excluded": "experimental semantic diagnostics, acceptance receipts, AppleDouble metadata, private credentials/logs"
   },
   "distribution": {
-    "system_image_release": "not_published",
-    "bundled_acceleration_fpk_release": "not_published",
+    "system_image_release": "authorization_pending",
+    "bundled_acceleration_fpk_release": "authorization_pending",
     "source_scope": "adaptation source and documentation",
     "image_xz": "private_candidate_hash_verified",
-    "source_zip": "local_checksum_verified"
+    "source_zip": "local_checksum_verified",
+    "source_release": "v0.3.0; adaptation source and corresponding Linux source"
   },
   "remaining": [
     "establish distribution scope for the modified image and bundled FPK",
@@ -57,7 +47,22 @@
     "native cross-version Photos and Media upgrade once compatible newer versions are available",
     "broader USB hardware"
   ],
-  "acceptance": {
+  "candidate_image": {
+    "filename": "fnos-x5-product-candidate-v030-r25.img",
+    "bytes": 13157531648,
+    "sha256": "0926654f6a575db104d74bac97e6e2c138df08ad9099770ab10f4d6123d3112d",
+    "offline_checks": 50,
+    "accel_rows": 3690,
+    "model_config_rows": 6,
+    "native_app_rows": 40,
+    "separately_tracked_license_files": 5,
+    "archive": {
+      "filename": "rdk-x5-fnos-v0.3.0.img.xz",
+      "bytes": 2632607980,
+      "sha256": "76d7bdb76f8b1454257fe890e8521799a5e3bde2a14047d22584dca7f5a330a7"
+    }
+  },
+  "acceptance_r24": {
     "scope": "r24 clean X5 first boot and native software acceptance",
     "usb_create_reboot_read_write": "passed",
     "independent_wlan_web_after_final_reboot": "passed",
@@ -71,21 +76,19 @@
     "reinstall_transcode": "H.264 and HEVC VPU encode and decode; short HEVC quality switch passed",
     "native_app_catalog": "on this X5, Photos 0.9.14 and Media 0.9.8-1 match the installed versions"
   },
-  "next_candidate": {
-    "image_revision": "r25",
-    "image_bytes": 13157531648,
-    "image_sha256": "0926654f6a575db104d74bac97e6e2c138df08ad9099770ab10f4d6123d3112d",
-    "offline_image_checks_passed": 50,
-    "fpk_build_version": "0.3.5",
-    "fpk_bytes": 1301594067,
-    "fpk_sha256": "da8fc1a064fcdea991d976fca4693bd48badd62ba9f6215845b1ab5a4b3bb2b3",
-    "targeted_regression_passed": 61,
-    "hardware_status": "raw image and XZ verified; board reached UMS; no bytes written pending Mac block-device presentation",
-    "fpk_hardware_status": "application center upgrade from 0.3.4 to 0.3.5 passed on r24; original apps running and timer active",
-    "image_archive": {
-      "filename": "rdk-x5-fnos-v0.3.0.img.xz",
-      "bytes": 2632607980,
-      "sha256": "76d7bdb76f8b1454257fe890e8521799a5e3bde2a14047d22584dca7f5a330a7"
-    }
+  "acceptance_r25": {
+    "image_offline_checks_passed": 50,
+    "source_linux_passed": 206,
+    "source_linux_skipped": 7,
+    "deployment": "full source stream and durable microSD write; post-write physical readback skipped",
+    "native_first_setup": "all four fields empty, independent setup complete",
+    "root": "expanded from 12 GiB to 29.5 GiB; retained after reboot",
+    "storage": "both ext4 and Btrfs volumes imported natively and mounted read/write after warm reboot",
+    "usb_create": "native Basic/Btrfs creation and remount validated on r24; r25 retests import, read/write and remount",
+    "original_media": "608 photos and 10 test videos preserved, file hashes match",
+    "wlan_and_smb": "independent clients verified before and after reboot",
+    "native_photos": "BPU face detection and FaceID128 confirmed by device descriptors and job rows",
+    "native_media": "H.264 and HEVC web transcode; hardware encode and decode both observed",
+    "standalone_fpk": "0.3.5 clean Web installation and warm reboot follow-up passed"
   }
 }

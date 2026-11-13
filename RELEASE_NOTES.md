@@ -1,6 +1,6 @@
-# v0.3.0 RDK X5 fnOS 候选
+# v0.3.0 RDK X5 fnOS 适配源码
 
-基于 fnOS ARM 1.2.0701 和 Linux 6.18.0。r24 已完成真板功能验收，r25 通过 50 项镜像检查。独立加速模块 0.3.5 已在 r24 上经应用中心升级验证。系统镜像与加速包的字节数和校验值见 [release.json](release.json)。
+基于 fnOS ARM 1.2.0701 和 Linux 6.18.0。r25 通过 50 项镜像检查及 X5 真板回归。独立加速模块 0.3.5 已在 r25 经应用中心全新安装并重启复测。系统镜像与加速包的字节数和校验值见 [release.json](release.json)。
 
 ## 本版更新
 
@@ -14,4 +14,4 @@
 
 安装步骤与 TODO 见 [README.md](README.md)，真板证据见 [TESTED.md](TESTED.md)，内核来源见 [KERNEL.md](KERNEL.md)。
 
-完整镜像和包含专有组件的资料只在对应授权范围内分发。项目原创代码、Linux 内核与其他第三方组件各自使用其适用许可证，见 [THIRD_PARTY.md](THIRD_PARTY.md)。
+本次公开资产为适配源码、对应 Linux 6.18 源码和校验文件。完整镜像和含第三方载荷的 FPK 待确认相应再分发许可。项目原创代码、Linux 内核与其他第三方组件各自使用其适用许可证，见 [THIRD_PARTY.md](THIRD_PARTY.md)。

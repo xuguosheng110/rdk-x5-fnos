@@ -1,17 +1,12 @@
 # RDK X5 独立 ARM64 加速模块（fnOS `.fpk`）
 
-状态：**r6 `0.3.1` 真实载荷包已生成，并在已有配置的 X5 上通过应用中心
-原生升级；新板干净安装、重启和生命周期验收仍未完成，未发布。**
-本页是安装、兼容版本、更新行为、回滚和剩余工作的唯一入口；不要把源码
-`tar.gz` 当成可安装包。
+当前构建版本为 **0.3.5**，适用于本项目 v0.3.0 候选。应用中心从 0.3.4 升级
+至 0.3.5 已在 X5 验证。r25 的网页全新安装和热重启复查通过。用户安装、兼容范围和下载状态见 [仓库 README](../../../../README.md)。
 
-## 1. 它是什么
+## 1. 模块内容
 
-r6 真实包（`fnos-x5-accel` 构建 `0.3.1`，公开系统版本 `0.3.0`）的
-SHA-256 为
-`f6401b83d1b9919cf89fff9b479e3581005e7a82fcefe3c78029a5285e0d73a9`，
-1,301,626,413 字节。它是一个可通过飞牛网页“应用中心 → 手动安装”安装的
-ARM64 加速模块：
+ARM64 包名为 `fnos-x5-accel-0.3.5-runtime.fpk`，大小 1,301,594,067 字节。
+对应的 SHA-256 见 [release.json](../../../../release.json)。
 
 - 相册：官方 BPU 人脸检测/106 点关键点/FaceID128 的 worker、模型和原生入口适配；
 - 影视：已验 VPU 编解码适配库、启动器和 `mediasrv` drop-in；
@@ -64,7 +59,7 @@ ARM64 加速模块：
 
 未知版本不会删除、覆盖或重编译原生二进制；不会为了“通过”降低版本检查。
 
-## 4. 安装步骤（验收通过后发布）
+## 4. 安装步骤
 
 前置：已使用本项目匹配的完整镜像启动；内核 `6.18.0`；已在飞牛网页创建或挂载
 数据卷；已通过应用中心安装相册和/或影视。无需 SSH 复制文件或手改服务。
@@ -124,7 +119,7 @@ ARM64 加速模块：
 | 用途 | 已存在位置 |
 |---|---|
 | 相册/影视安装包与模型 | `<FNOS_BUILD_ROOT>/integration-20261109/product-inputs-20261110` |
-| 相册原生 worker/模型/Python 资产 | `<FNOS_BUILD_ROOT>/delivery-v030-20261112/photos-assets`（7875 文件；worker 已更新为 `714618…`） |
+| 相册原生 worker/模型/Python 资产 | `<FNOS_BUILD_ROOT>/delivery-v030-20261112/photos-assets`（原始构建输入；实际包按 runtime 清单收集，worker 为 `714618…`） |
 | 旧只读基线（不修改） | `<FNOS_BUILD_ROOT>/integration-20261109/photos-assets-r2-official` |
 | 影视 VPU 适配库 | `<FNOS_BUILD_ROOT>/native-media-review-20261110-r24/libfnos_hobot_avcodec-r24.so` |
 | X5 运行库/固件源 | `<FNOS_BUILD_ROOT>/integration-20261109/source` |
@@ -139,7 +134,7 @@ python3 fnos/integration/acceleration/build_module.py \
   --source-root /path/to/reviewed-rootfs \
   --product-inputs /path/to/reviewed-product-inputs \
   --icon /path/to/ICON.PNG --icon-256 /path/to/ICON_256.PNG \
-  --profile runtime --version 0.3.1 --fnpack /usr/local/bin/fnpack \
+  --profile runtime --version 0.3.5 --fnpack /usr/local/bin/fnpack \
   --output /path/to/accel-module-output
 ```
 

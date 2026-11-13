@@ -7,10 +7,7 @@ The full historical `unittest discover` suite is retained but is not self-contai
 v0.2.0 source verification (2026-11-11): 163 tests run, 162 passed, 1 skipped because the dedicated X5 ONNX toolchain was unavailable in the test interpreter. The assembly checks and the llbitmap timeout simulation are recorded in [TESTED.md](TESTED.md). The image split/join verification applies to v0.1.0.
 
 
-v0.3.0 source draft (2026-11-12): the staging tree is assembled from the
-public v0.2.0 source commit plus the r20/r6 accepted source map. No new
-full-suite pass is claimed for this draft. The 49 checks are finished-image
-checks on the build server, and the r6 native-upgrade result is restricted to
-the already configured target. Final source regression, new-board install and
-real-board acceptance must be run after the draft is reviewed and published
-inputs are sealed.
+v0.3.0 candidate source on the build server passed 206 tests with 7 skips.
+The r25 disk image passed 50 independent finished-image checks. These are
+software and artifact results. See [TESTED.md](TESTED.md) for separately
+recorded RDK X5 results.
