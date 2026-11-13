@@ -28,7 +28,7 @@ DEFAULT_MODEL_INVENTORY = MODULE / 'model-inventory.json'
 DEFAULT_RUNTIME_MODEL_INVENTORY = MODULE / 'runtime-model-inventory.json'
 APPNAME = 'fnos-x5-accel'
 PUBLIC_VERSION = '0.3.0'
-BUILD_VERSION = '0.3.4'
+BUILD_VERSION = '0.3.5'
 VERSION = BUILD_VERSION
 OS_VERSION = '1.2.0701'
 
@@ -54,7 +54,7 @@ def _manifest(version):
         'platform=arm', 'source=thirdparty', 'maintainer=RDK X5 fnOS community',
         f'os_min_version={OS_VERSION}', f'os_max_version={OS_VERSION}',
         'ctl_stop=false', 'checkport=false',
-        'changelog=修复影视片尾切换清晰度时的播放中断，保留应用版本检查及安装回滚。',
+        'changelog=保护未适配原生应用的模型和运行状态，修复加速包升级失败时的文件属主恢复。',
     )) + '\n'
 
 

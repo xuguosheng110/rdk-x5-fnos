@@ -15,5 +15,5 @@ The download instructions in the [v0.2.0 release](https://github.com/xuguosheng1
 link to the matching `rdk-x5-linux-6.18-storage-r16-source.tar.gz`. The
 archive carries the kernel source and config under its applicable upstream licenses.
 
-[D-Robotics kernel repository](https://github.com/D-Robotics/kernel) is an upstream
+[D-Robotics X5 kernel repository](https://github.com/D-Robotics/x5-kernel) is an upstream
 reference. The archive above pins the exact build used for this fnOS candidate.

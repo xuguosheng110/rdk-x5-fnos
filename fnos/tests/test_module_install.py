@@ -106,6 +106,17 @@ class ModuleInstallTests(unittest.TestCase):
         call = module_install.product_ai_defaults.seed_ai.call_args
         self.assertNotIn('include_face_model', call.kwargs)
 
+    def test_unknown_photos_upgrade_neither_seeds_models_nor_restarts_app(self):
+        self.patch_install()
+        (self.f.root / 'var/apps/trim.photos/target/trim-photos').write_bytes(b'new native app\n')
+        result, code = module_install.install(self.f.root, self.package, require_complete=False)
+        self.assertEqual(code, 0)
+        self.assertEqual(result['photos']['status'], 'preserved_native_no_patch')
+        module_install.product_bootstrap.Bootstrap.seed_models.assert_not_called()
+        module_install.product_bootstrap.Bootstrap.seed_python.assert_not_called()
+        module_install._reload_if_running.assert_called_once_with(
+            self.f.root, [product_accel.MEDIA], result)
+
     def test_waiting_for_native_apps_does_not_install_or_touch_files(self):
         self.patch_install(apps={'trim.photos': 'Not Installed', 'trim.media': 'Not Installed'})
         result, code = module_install.install(self.f.root, self.package, require_complete=False)

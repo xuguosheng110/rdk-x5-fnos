@@ -208,16 +208,22 @@ class ProductAccelTests(unittest.TestCase):
         self.f.apply()
         self.f.make_bundle(worker=b'worker-v2\n', wrapper=b'wrapper-v2\n', version='0.3.1')
         real = product_accel._write_target
+        worker = self.f.root / 'usr/lib/fnos-x5/face128_worker'
+        owner = product_accel._owner(worker)
+        restored_owners = []
 
         def fail_entry(source, target, mode, **kwargs):
             if target.name == 'face_det.bin':
                 raise OSError('simulated v2 write failure')
+            if target == worker and source.read_bytes() == b'worker-v1\n':
+                restored_owners.append((kwargs.get('uid'), kwargs.get('gid')))
             return real(source, target, mode, **kwargs)
 
         with patch.object(product_accel, '_write_target', side_effect=fail_entry):
             with self.assertRaises(OSError):
                 self.f.apply(module_version='0.3.1')
         self.assertEqual((self.f.root / 'usr/lib/fnos-x5/face128_worker').read_bytes(), b'worker-v1\n')
+        self.assertEqual(restored_owners, [owner])
         self.assertEqual(self.f.entry_path.read_bytes(), b'wrapper-v1\n')
         self.assertEqual(product_accel.installed_status(self.f.root, self.f.state)['status'], 'installed')
         product_accel.uninstall_bundle(self.f.root, state_dir=self.f.state)

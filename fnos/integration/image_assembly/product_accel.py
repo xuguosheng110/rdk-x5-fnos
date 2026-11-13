@@ -738,7 +738,7 @@ def apply_bundle(root, bundle_dir, *, platform_probe=None, state_dir=None,
                     if snapshot:
                         source = state_dir / snapshot
                         _write_target(source, target, source.stat().st_mode & 0o777,
-                                  uid=row.get('uid'), gid=row.get('gid'))
+                                      uid=owner_uid, gid=owner_gid)
                     elif target.exists():
                         target.unlink()
                 except OSError as rollback_error:

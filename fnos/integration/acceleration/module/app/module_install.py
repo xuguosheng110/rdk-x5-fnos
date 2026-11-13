@@ -714,8 +714,6 @@ def install(root, package_root, *, upgrade=False, require_complete=True):
     model_manifest, model_payload = _models_manifest(package_root)
     bootstrap = product_bootstrap.Bootstrap(root, payload=model_payload)
     try:
-        if model_manifest is not None and app_state[product_accel.PHOTOS] == 'Installed':
-            bootstrap.seed_models(volume, model_manifest)
         compat_state = product_accel.compat_status(root, compat)
         result['compat'] = compat_state
         if app_state[product_accel.PHOTOS] == 'Installed':
@@ -723,6 +721,8 @@ def install(root, package_root, *, upgrade=False, require_complete=True):
                 product_ai_defaults.check_binary(
                     root / 'var/apps/trim.photos/target/trim-photos',
                     product_ai_defaults.PHOTOS_SHA)
+                if model_manifest is not None:
+                    bootstrap.seed_models(volume, model_manifest)
                 bootstrap.seed_python(volume)
                 ai_manager = compat.get('native', {}).get('ai_manager', {})
                 if ai_manager and (root / ai_manager['path']).is_file():
@@ -744,7 +744,8 @@ def install(root, package_root, *, upgrade=False, require_complete=True):
                 root, enabled=(root / media_web.SHIM).is_file()
                 and compat_state['media']['status'] == 'supported')
         running = [name for name in (product_accel.PHOTOS, product_accel.MEDIA)
-                   if app_state[name] == 'Installed']
+                   if app_state[name] == 'Installed'
+                   and compat_state[name.removeprefix('trim.')]['status'] == 'supported']
         failures = _reload_if_running(root, running, result)
         if failures:
             result['status'] = 'installed_reload_pending'
