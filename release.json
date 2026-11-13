@@ -1,6 +1,6 @@
 {
   "version": "v0.3.0",
-  "status": "candidate_not_released",
+  "status": "r25_candidate_ready_for_flash",
   "release_date": null,
   "base_fnos": "1.2.0701",
   "kernel": {
@@ -70,5 +70,22 @@
     "reinstall_media_integrity": "608 photos and 10 test videos match before and after",
     "reinstall_transcode": "H.264 and HEVC VPU encode and decode; short HEVC quality switch passed",
     "native_app_catalog": "on this X5, Photos 0.9.14 and Media 0.9.8-1 match the installed versions"
+  },
+  "next_candidate": {
+    "image_revision": "r25",
+    "image_bytes": 13157531648,
+    "image_sha256": "0926654f6a575db104d74bac97e6e2c138df08ad9099770ab10f4d6123d3112d",
+    "offline_image_checks_passed": 50,
+    "fpk_build_version": "0.3.5",
+    "fpk_bytes": 1301594067,
+    "fpk_sha256": "da8fc1a064fcdea991d976fca4693bd48badd62ba9f6215845b1ab5a4b3bb2b3",
+    "targeted_regression_passed": 61,
+    "hardware_status": "raw image and XZ verified; board reached UMS; no bytes written pending Mac block-device presentation",
+    "fpk_hardware_status": "application center upgrade from 0.3.4 to 0.3.5 passed on r24; original apps running and timer active",
+    "image_archive": {
+      "filename": "rdk-x5-fnos-v0.3.0.img.xz",
+      "bytes": 2632607980,
+      "sha256": "76d7bdb76f8b1454257fe890e8521799a5e3bde2a14047d22584dca7f5a330a7"
+    }
   }
 }
