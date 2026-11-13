@@ -27,6 +27,9 @@
 >
 > 选择 `rdk-x5-fnos-v0.2.0.img.xz`。同一目录提供 `SHA256SUMS`、内核源码和安装说明。 [GitHub Release](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.2.0)
 
+> [!NOTE]
+> **[v0.3.0 适配源码版](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.3.0)** 已发布，包含适配源码、对应 Linux 6.18 源码、验收说明和校验清单。完整镜像与含第三方载荷的加速包仍待确认再分发许可。下方快速开始对应 v0.2.0 镜像。
+
 ## 快速开始
 
 准备 **RDK X5、至少 32 GB 的系统 SD 卡、独立 USB 数据盘**。首次启动建议接有线网络。使用符合 RDK 官方要求的电源，多盘或机械硬盘可使用独立供电。
