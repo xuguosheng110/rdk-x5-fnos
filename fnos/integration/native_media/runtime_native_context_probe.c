@@ -2,6 +2,7 @@
  * Compile on the designated server against pinned native FFmpeg. The board
  * owner runs each mode with the candidate preloaded; outputs are test files. */
 #include <stdio.h>
+#include <limits.h>
 #include <string.h>
 #include "libavcodec/avcodec.h"
 #include "libavutil/opt.h"
@@ -22,13 +23,14 @@ int main(int argc, char **argv)
 {
     if (argc != 3 || (strcmp(argv[2], "high5") && strcmp(argv[2], "blank") &&
                      strcmp(argv[2], "hevc51") && strcmp(argv[2], "hevcblank") &&
-                     strcmp(argv[2], "hevc51-cpu"))) {
-        fprintf(stderr, "usage: %s output high5|blank|hevc51|hevcblank|hevc51-cpu\n", argv[0]);
+                     strcmp(argv[2], "hevc51-cpu") && strcmp(argv[2], "thumb"))) {
+        fprintf(stderr, "usage: %s output high5|blank|hevc51|hevcblank|hevc51-cpu|thumb\n", argv[0]);
         return 2;
     }
     if (avcodec_version() != AV_VERSION_INT(62, 28, 101)) return 2;
     int hevc = !strncmp(argv[2], "hevc", 4);
-    int cpu_control = !strcmp(argv[2], "hevc51-cpu");
+    int thumbnail = !strcmp(argv[2], "thumb");
+    int cpu_control = !strcmp(argv[2], "hevc51-cpu") || thumbnail;
     int explicit_profile = !strcmp(argv[2], "high5") || !strcmp(argv[2], "hevc51") || cpu_control;
     const char *software = hevc ? "libx265" : "libx264";
     const AVCodec *codec = explicit_profile ? avcodec_find_encoder_by_name(software) :
@@ -49,6 +51,12 @@ int main(int argc, char **argv)
     ctx->framerate = (AVRational){25, 1};
     ctx->flags = hevc ? 0 : AV_CODEC_FLAG_CLOSED_GOP;
     ctx->bit_rate = 2000000;
+    if (thumbnail) {
+        ctx->width = 1920;
+        ctx->height = 1080;
+        ctx->bit_rate = 0;
+        ctx->gop_size = INT_MAX;
+    }
     ctx->max_b_frames = explicit_profile ? 0 : -1;
     if (explicit_profile) {
         ctx->profile = hevc ? AV_PROFILE_HEVC_MAIN : AV_PROFILE_H264_HIGH;

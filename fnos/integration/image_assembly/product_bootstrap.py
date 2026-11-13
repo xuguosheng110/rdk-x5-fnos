@@ -14,12 +14,15 @@ import re
 import shutil
 import subprocess
 import tempfile
+import time
 from datetime import datetime, timezone
 
 if __package__:
-    from . import product_ai_defaults
+    from . import media_web, product_ai_defaults, product_accel
 else:
+    import media_web
     import product_ai_defaults
+    import product_accel
 
 PAYLOAD = Path('usr/share/fnos-x5/product-inputs')
 STATE = Path('var/lib/fnos-x5/product-bootstrap')
@@ -91,9 +94,16 @@ def verified_inputs(root):
 
 
 class Bootstrap:
-    def __init__(self, root=Path('/'), runner=subprocess.run):
+    def __init__(self, root=Path('/'), runner=subprocess.run, payload=None):
         self.root = Path(root)
         self.runner = runner
+        if payload is not None:
+            self.payload = Path(payload)
+        else:
+            # The native app target is intentionally a symlink to /volN.
+            module_payload = self.root / 'var/apps/fnos-x5-accel/target/payload/product-inputs'
+            self.payload = (module_payload if (module_payload / 'inputs.json').is_file()
+                            else safe_path(self.root, PAYLOAD))
         self.state_dir = safe_path(self.root, STATE)
         self.state_file = self.state_dir / 'state.json'
         self.complete = self.state_dir / 'complete.json'
@@ -115,6 +125,26 @@ class Bootstrap:
 
     def volume(self):
         value = self.cli('default-volume')
+        if value == '0':
+            # Web installation records its chosen volume in native app metadata,
+            # independently of the CLI default. Never guess from attached disks.
+            choices = set()
+            for name in APPS:
+                parent = safe_path(self.root, Path('var/apps') / name)
+                meta = parent / 'meta'
+                if not meta.is_symlink():
+                    continue
+                match = re.fullmatch(r'/vol([1-9][0-9]*)/@appmeta/' + re.escape(name),
+                                     os.readlink(meta))
+                if not match:
+                    return None
+                selected = match.group(1)
+                if not safe_path(self.root, Path('vol' + selected) / '@appmeta' / name).is_dir():
+                    return None
+                choices.add(selected)
+            if len(choices) != 1:
+                return None
+            value = choices.pop()
         if not re.fullmatch(r'[1-9][0-9]*', value):
             return None
         volume = safe_path(self.root, 'vol' + value)
@@ -123,8 +153,22 @@ class Bootstrap:
         # /proc/self is the kernel-provided symlink to this process.
         mounts = (self.root / 'proc/self/mountinfo').read_text().splitlines()
         target = '/vol' + value
-        if not any(len(line.split()) > 5 and line.split()[4] == target and
-                   'rw' in line.split()[5].split(',') for line in mounts):
+        usable = False
+        for line in mounts:
+            fields = line.split()
+            if len(fields) < 10 or fields[4] != target or '-' not in fields:
+                continue
+            separator = fields.index('-')
+            if len(fields) <= separator + 3:
+                continue
+            mount_options = set(fields[5].split(','))
+            super_options = set(fields[separator + 3].split(','))
+            # ext4 can retain VFS rw while the superblock is emergency_ro.
+            # Both layers must allow writes before touching model/app state.
+            usable = ('rw' in mount_options and 'rw' in super_options and
+                      not {'ro', 'emergency_ro'} & (mount_options | super_options))
+            break
+        if not usable:
             return None
         if not volume.is_dir():
             return None
@@ -149,7 +193,7 @@ class Bootstrap:
             dest.parent.mkdir(parents=True, exist_ok=True, mode=0o755)
             fd, temporary = tempfile.mkstemp(prefix='.fnos-seed-', dir=dest.parent)
             try:
-                with os.fdopen(fd, 'wb') as out, safe_path(self.root / PAYLOAD, row['path']).open('rb') as source:
+                with os.fdopen(fd, 'wb') as out, safe_path(self.payload, row['path']).open('rb') as source:
                     shutil.copyfileobj(source, out, 8 * 1024 * 1024)
                     out.flush()
                     os.fsync(out.fileno())
@@ -196,7 +240,29 @@ class Bootstrap:
             finally:
                 if temporary.exists():
                     shutil.rmtree(temporary)
+        # Native embedded executables use PYTHONPATH without processing .pth.
+        # Expose bundled packages directly in the directory supplied by ai_manager.
+        site = destination / 'lib/python3.11/site-packages'
+        for package in dependencies.iterdir():
+            if package.name.startswith('.') or package.name == '__pycache__':
+                continue
+            link = site / package.name
+            if link.is_symlink():
+                if os.readlink(link) != str(package):
+                    raise RuntimeError('existing native Python package link differs: ' + package.name)
+            elif not link.exists():
+                link.symlink_to(package)
         self.verify_python(destination / 'bin/python3')
+        # ai_manager's embedded executables do not load site or .pth files.
+        # Validate that exact import mode, not just the ordinary venv mode.
+        probe = ('import numpy,onnxruntime,cv2,sklearn,faiss,sentencepiece; '
+                 'print("FNOS_AI_EMBEDDED_IMPORTS_OK")')
+        result = self.runner([str(self.root / 'usr/bin/python3'), '-S', '-c', probe],
+                             env={**os.environ, 'PYTHONPATH': str(site), 'PYTHONNOUSERSITE': '1'},
+                             capture_output=True, text=True, timeout=120,
+                             stdin=subprocess.DEVNULL, cwd=str(self.root))
+        if result.returncode or result.stdout.strip() != 'FNOS_AI_EMBEDDED_IMPORTS_OK':
+            raise RuntimeError('native embedded AI Python import check failed')
         self.state['python'] = {'created': created, 'source': str(dependencies),
                                 'verified': 'CPython3.11; numpy, onnxruntime, cv2, sklearn, faiss, sentencepiece'}
 
@@ -222,9 +288,210 @@ class Bootstrap:
         if result.returncode:
             raise RuntimeError('native AI manager configuration reload failed')
         if self.cli('status', 'trim.photos') == 'running':
-            self.cli('restart', 'trim.photos', timeout=120)
+            # appcenter-cli 1.0.2 has no restart command (even errors exit 0).
+            self.cli('stop', 'trim.photos', timeout=120)
+            self.cli('start', 'trim.photos', timeout=120)
             if self.cli('status', 'trim.photos') != 'running':
                 raise RuntimeError('native Photos configuration reload failed')
+
+    def accel_bundle(self):
+        path = self.root / product_accel.BUNDLE_ROOT
+        return path if (path / 'bundle.json').is_file() else None
+
+    def reload_policy(self, report, app):
+        return report.get('restart_policy', {}).get(app, {})
+
+    def reload_once(self, app, report, *, reason):
+        """Reload a running app once.  Persist a backoff before returning.
+
+        A failed start must not turn the five-minute timer into a crash loop.
+        The user-visible recovery entry is ``--reset-reload``; a later successful
+        check also clears the budget.
+        """
+        policy = self.reload_policy(report, app)
+        if policy.get('next_retry', 0) > time.time():
+            return False, 'deferred'
+        if policy.get('attempts', 0) >= 3:
+            return False, 'exhausted'
+        # Persist before restart so a crash retries the reload, not a half state.
+        atomic_json(self.state_dir / 'runtime-health.json',
+                    {**report, 'status': 'reloading', 'reload_pending': True,
+                     'reload_reason': reason})
+        self.cli('stop', app, timeout=120)
+        self.cli('start', app, timeout=120)
+        if self.cli('status', app) != 'running':
+            attempts = policy.get('attempts', 0) + 1
+            delay = min(300 * (2 ** (attempts - 1)), 3600)
+            report.setdefault('restart_policy', {})[app] = {
+                'attempts': attempts, 'last_error': reason,
+                'next_retry': time.time() + delay}
+            return False, 'failed'
+        report.setdefault('restart_policy', {})[app] = {'attempts': 0}
+        return True, 'reloaded'
+
+    def repair_accel(self, report, *, require_complete=True):
+        """Verify/reapply the reviewed overlay; unknown vendor files stay native."""
+        bundle = self.accel_bundle()
+        if bundle is None:
+            return {'status': 'not_staged'}
+        state = product_accel.installed_status(self.root)
+        if state.get('status') in ('uninstalled', 'uninstalled_with_preserved_changes'):
+            return {'status': 'not_installed', 'preserved': state.get('preserved', [])}
+        try:
+            if state.get('status') not in ('installed', 'already_installed') or state.get('mismatches'):
+                # First runtime check after the image (or module) is staged
+                # verifies the in-place payload and records it.  A mismatch
+                # reapplies only reviewed overlays; unknown vendor files stay.
+                applied = product_accel.apply_bundle(self.root, bundle, require_complete=require_complete)
+            else:
+                applied = {'status': 'already_installed', 'changed': []}
+        except product_accel.AccelError as error:
+            return {'status': 'repair_required', 'error': str(error),
+                    'mismatches': state.get('mismatches', [])}
+        return {'status': applied.get('status'),
+                'changed': applied.get('changed', []),
+                'skipped': applied.get('skipped', state.get('skipped', []))}
+
+    def repair_runtime(self):
+        """Repair installed dependencies without reinstalling or starting apps.
+
+        This is separate from initial provisioning: complete.json must not hide
+        missing runtime files after an app update. Never resets AI preferences,
+        never writes into user indexes/media and never starts a stopped app.
+        Without the standalone module bundle this keeps the original Photos-only
+        contract; with it, Media and the reviewed overlay are covered too.
+        """
+        self.state_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+        report = self.state_dir / 'runtime-health.json'
+        lock_path = self.state_dir / 'lock'
+        lock = lock_path.open('a')
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            lock.close()
+            return {'status': 'skipped_busy',
+                    'reason': 'another product runtime repair holds the lock',
+                    'health': str(report)}
+        with lock:
+            try:
+                prior = json.loads(report.read_text()) if report.exists() else {}
+                has_bundle = self.accel_bundle() is not None
+                apps = list(APPS) if has_bundle else [product_accel.PHOTOS]
+                installed = {}
+                for app in apps:
+                    value = self.cli('check', app)
+                    if value not in ('Installed', 'Not Installed'):
+                        raise RuntimeError('unrecognized native installation state')
+                    installed[app] = value
+                if all(value == 'Not Installed' for value in installed.values()):
+                    result = {'status': 'not_installed'}
+                else:
+                    selected = self.volume()
+                    if selected is None:
+                        result = {'status': 'waiting_for_native_data_volume',
+                                  'apps': installed}
+                    else:
+                        index, volume = selected
+                        result = {'status': 'runtime_ready', 'volume': '/vol' + index,
+                                  'apps': installed, 'compat': {},
+                                  'reload_pending': False}
+                        if has_bundle:
+                            result['accel'] = self.repair_accel(report)
+                        elif installed.get(product_accel.PHOTOS) == 'Installed':
+                            result['accel'] = {'status': 'legacy_photos_only'}
+                        photos = installed.get(product_accel.PHOTOS) == 'Installed'
+                        media = installed.get(product_accel.MEDIA) == 'Installed'
+                        if photos:
+                            compat = product_accel.compat_status(self.root, product_accel.load_compat(
+                                self.accel_bundle() / 'compat.json')) if has_bundle else None
+                            result['compat']['photos'] = compat['photos'] if compat else 'legacy_pinned'
+                            if compat and compat['photos']['status'] != 'supported':
+                                result['status'] = 'compat_unknown'
+                                result['photos'] = {'status': 'preserved_native_no_patch',
+                                                    'reason': compat['photos']['status'],
+                                                    'recovery': compat['photos'].get('recovery')}
+                            else:
+                                product_ai_defaults.check_binary(
+                                    self.root / 'var/apps/trim.photos/target/trim-photos',
+                                    product_ai_defaults.PHOTOS_SHA)
+                                self.seed_python(volume)
+                                manifest_path = self.payload / 'inputs.json'
+                                if manifest_path.is_file():
+                                    model_manifest = json.loads(manifest_path.read_text())
+                                    model_manifest['files'] = [
+                                        row for row in model_manifest.get('files', [])
+                                        if row['path'].startswith('ai-models/')]
+                                    if model_manifest['files']:
+                                        self.seed_models(volume, model_manifest)
+                                acl = product_ai_defaults.ensure_postgres_access(self.root, self.runner)
+                                defaults = product_ai_defaults.seed_photos(root=self.root)
+                                accel_changed = result.get('accel', {}).get('changed', [])
+                                reload_needed = (defaults['inserted'] > 0 or acl.get('changed', False)
+                                                 or prior.get('reload_pending', False)
+                                                 or any('face_det.bin' in name or 'face128_worker' in name
+                                                        or 'face_detection_worker' in name
+                                                        for name in accel_changed))
+                                result['photos'] = {'defaults': defaults,
+                                                    'postgres_access': acl.get('changed', False)}
+                                result['reload_pending'] = bool(reload_needed)
+                                if reload_needed and self.cli('status', product_accel.PHOTOS) == 'running':
+                                    ok, why = self.reload_once(product_accel.PHOTOS, prior,
+                                                               reason='photos dependencies/defaults changed')
+                                    result['reload'] = {'app': product_accel.PHOTOS, 'result': why}
+                                    result['reload_pending'] = not ok
+                                    if not ok:
+                                        result['status'] = 'runtime_reload_pending'
+                                elif reload_needed:
+                                    result['status'] = 'runtime_reload_pending'
+                        if media and has_bundle:
+                            compat = product_accel.compat_status(self.root, product_accel.load_compat(
+                                self.accel_bundle() / 'compat.json'))
+                            result['compat']['media'] = compat['media']
+                            if compat['media']['status'] != 'supported':
+                                result['status'] = ('compat_unknown' if result['status'] == 'runtime_ready'
+                                                    else result['status'])
+                                result['media'] = {'status': 'native_fallback',
+                                                   'reason': compat['media']['status'],
+                                                   'recovery': compat['media'].get('recovery')}
+                            else:
+                                changed = result.get('accel', {}).get('changed', [])
+                                result['media'] = {'status': 'hardware_overlay_verified'}
+                                if (any('mediasrv' in name or 'libavcodec-hobot-' in name for name in changed)
+                                        and self.cli('status', product_accel.MEDIA) == 'running'):
+                                    ok, why = self.reload_once(product_accel.MEDIA, prior,
+                                                               reason='media overlay changed')
+                                    result['reload_media'] = {'app': product_accel.MEDIA, 'result': why}
+                                    if not ok:
+                                        result['status'] = 'runtime_reload_pending'
+                            shim_ready = ((self.root / media_web.SHIM).is_file()
+                                          and result['accel']['status'] in ('installed', 'already_installed'))
+                            result['media']['web_quality_switch'] = media_web.reconcile(
+                                self.root, enabled=shim_ready and compat['media']['status'] == 'supported')
+                        unknown_overlay = [row for row in result.get('accel', {}).get('skipped', [])
+                                           if row.get('reason') in ('unknown_native', 'unknown_native_unit')]
+                        if unknown_overlay:
+                            result['overlay'] = {'status': 'preserved_native_no_patch',
+                                                 'skipped': unknown_overlay,
+                                                 'recovery': '更新模块兼容清单后再安装；当前保留原生可用路径'}
+                            if result['status'] == 'runtime_ready':
+                                result['status'] = 'compat_unknown'
+                        if result.get('accel', {}).get('status') in ('repair_required',
+                                                                     'no_compatible_native'):
+                            result['status'] = 'repair_required'
+                        if not photos and not media:
+                            result['status'] = 'not_installed'
+                        if photos or media:
+                            result.setdefault('scope', 'dependencies, reviewed overlay, postgres directory access; '
+                                                       'never user config/index/media')
+                result['checked_at'] = datetime.now(timezone.utc).isoformat()
+                result['restart_policy'] = prior.get('restart_policy', {})
+                atomic_json(report, result)
+                return result
+            except Exception as error:
+                pending = json.loads(report.read_text()).get('reload_pending', False) if report.exists() else False
+                atomic_json(report, {'status': 'repair_required', 'reload_pending': pending, 'error': str(error),
+                                     'checked_at': datetime.now(timezone.utc).isoformat()})
+                raise
 
     def run(self, *, execute=False):
         if self.complete.exists():
@@ -293,13 +560,45 @@ class Bootstrap:
                 raise
 
 
+def _module_owned(root=Path('/')):
+    """True when the standalone accel module owns the runtime repair timer."""
+    try:
+        health = json.loads((Path(root) / 'var/lib/fnos-x5/accel/module-health.json').read_text())
+    except (OSError, ValueError):
+        return False
+    return health.get('status') in (
+        'installed', 'installed_repair_required', 'waiting_for_native_apps')
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--execute', action='store_true')
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--execute', action='store_true')
+    mode.add_argument('--repair-runtime', action='store_true')
+    mode.add_argument('--reset-reload', action='store_true',
+                      help='clear the persisted restart backoff before the next repair')
+    mode.add_argument('--module-owned-check', action='store_true',
+                      help='systemd ExecCondition: skip the image timer while the module owns repair')
     args = parser.parse_args()
-    if args.execute and os.geteuid() != 0:
+    if (args.execute or args.repair_runtime or args.reset_reload) and os.geteuid() != 0:
         raise SystemExit('native first-boot installation requires root')
-    print(json.dumps(Bootstrap().run(execute=args.execute), ensure_ascii=False))
+    if args.module_owned_check:
+        raise SystemExit(1 if _module_owned(Path('/')) else 0)
+    bootstrap = Bootstrap()
+    if args.reset_reload:
+        report = bootstrap.state_dir / 'runtime-health.json'
+        data = json.loads(report.read_text()) if report.exists() else {}
+        data['restart_policy'] = {}
+        data['reload_pending'] = False
+        data['status'] = 'reload_budget_reset'
+        data['checked_at'] = datetime.now(timezone.utc).isoformat()
+        atomic_json(report, data)
+        result = data
+    elif args.repair_runtime:
+        result = bootstrap.repair_runtime()
+    else:
+        result = bootstrap.run(execute=args.execute)
+    print(json.dumps(result, ensure_ascii=False))
 
 
 if __name__ == '__main__':

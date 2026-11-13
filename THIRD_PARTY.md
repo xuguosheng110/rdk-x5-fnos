@@ -4,7 +4,13 @@ This repository publishes the X5 integration layer. Existing SPDX headers and up
 
 The system image includes fnOS ARM user space, Linux and D-Robotics runtime/model components. Their respective licenses and notices apply. This community release does not claim ownership of proprietary components or imply vendor endorsement. Third-party full source and model payloads are not included in this Git source export. Build inputs must be obtained from their upstream distributions under their applicable terms.
 
-Model source revisions and hashes: `fnos/integration/native_photos/model-sources.json`. Entries marked experimental or failed are not the default product route. v0.1.0 uses official face detection, landmark106 and FaceID128; it does not ship the experimental semantic BPU route as the default.
+Model source revisions and hashes: `fnos/integration/native_photos/model-sources.json`. Entries marked experimental or failed are not the default product route. v0.3.0 uses official face detection, landmark106 and FaceID128; it does not ship the experimental semantic BPU route as the default.
+
+## 0.3.0 候选载荷核对
+
+r24 系统镜像含飞牛用户态、相册 0.9.14 和影视 0.9.8-1。飞牛 EULA V2 第 3 节对专有部分的修改和再分发作出限制，当前项目记录缺少覆盖这一镜像的书面许可。[飞牛系统最终用户许可协议](https://fnnas.com/terms)
+
+独立 0.3.4 FPK 包含适配库、BPU 模型以及 6 个相册兼容与语义模型文件，其中包括官方 ONNX 模型和分词文件。完整 FPK 再分发需按载荷逐项核实许可。源码归档的两个 `.so` 后缀文件是输入审计用的 ASCII 测试样本。
 
 ## 许可核对（2026-11-11）
 
@@ -18,4 +24,4 @@ Model source revisions and hashes: `fnos/integration/native_photos/model-sources
 
 飞牛协议第 1 节授予有限个人非商用许可；第 3 节对分发、修改等行为规定限制，第 6 节保留开源组件自身许可的优先性。本仓库没有保存证明完整修改镜像获得再分发许可的材料，因此**不能将已提供下载等同于已取得第三方分发授权**。应核实适用版本的明确许可或取得书面授权；“免费”“家庭使用”“注明来源”都不能自动替代该授权。本说明不是飞牛的授权书。
 
-v0.2.0 Release 的内核归档包含 r16 对应的 X5 Linux 6.18 源码快照、构建配置和编译器版本。该归档与适配仓库分别保留各自的上游许可。BSP 的精确提交对应关系仍列在 TODO 中。第三方商标、名称及版权归各自权利人。
+v0.2.0 Release 的内核归档包含 r16 对应的 X5 Linux 6.18 源码快照、构建配置和编译器版本。v0.3.0 候选沿用同一 Linux 6.18 内核和配置。已核对归档 SHA-256、内含构建记录和配置文件；该归档与适配仓库分别保留各自的上游许可。0.3.4 加速模块包含的相册/影视适配、Python 依赖、模型和厂商运行库分别适用其上游许可；模块源码 ZIP 不重新授权这些二进制或模型。BSP 的精确提交对应关系仍列在 TODO 中。第三方商标、名称及版权归各自权利人。

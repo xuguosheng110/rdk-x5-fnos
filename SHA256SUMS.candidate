@@ -1,0 +1,5 @@
+# Reference checksums for the r24 hardware test candidate and matching kernel source.
+aaf0477d6c6dcdce67596e2dc67838520b6112091f9033218f86c5e1d59718ee  fnos-x5-accel-0.3.4-runtime.fpk
+45240f482e3b8d38a4cdd254ee33b4e201f091ffadf3cfebd247150a4e9da921  fnos-x5-product-candidate-v030-r24.img
+186ac0c983632eac293af0a473e462a915349b1b2ef9a6689ca53463c490a731  rdk-x5-fnos-v0.3.0.img.xz
+be478464d0ad66150bd8325858ef9f53b9f92528b88b5091ffe422f5c4d9dea3  rdk-x5-linux-6.18-storage-r16-source.tar.gz

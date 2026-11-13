@@ -37,7 +37,7 @@ class ApprovalTests(unittest.TestCase):
             'private_paths': {'local_directory': str(self.root)}}))
         self.data = {'schema': 'fnos-ram-deploy-approval/v1', 'accepted': True,
             'review_status': 'independently_approved_for_board_deploy', 'reviewer': 'independent fixture reviewer', 'server': SERVER,
-            'image': {'path': '/data/disk1/rdk-x5-fnos-guosheng/assembly-test/artifacts/final.img', 'bytes': 4096, 'sha256': 'b'*64},
+            'image': {'path': '/srv/fnos-build/assembly-test/artifacts/final.img', 'bytes': 4096, 'sha256': 'b'*64},
             'target': {'board_id': 'x5-lab-01', 'device': '/dev/mmcblk1', 'cid': CID, 'bytes': CARD_BYTES, 'major': 179, 'minor': 8},
             'rescue_boot_id': BOOT, 'rescue_host': '192.0.2.10', 'known_hosts_sha256': 'c'*64,
             'helper_sha256': digest(self.helper), 'selective_backup_review_sha256': digest(self.review)}
@@ -83,7 +83,7 @@ class ApprovalTests(unittest.TestCase):
         with self.assertRaises(ValueError): validate_approval(self.approval, '0'*64, self.helper, self.review)
 
     def test_image_outside_server_or_wrong_length_rejected(self):
-        for path in ['/tmp/a.img', '/data/disk1/rdk-x5-fnos-guosheng/../a.img']:
+        for path in ['/tmp/a.img', '/srv/fnos-build/../a.img']:
             self.data['image']['path'] = path
             with self.assertRaises(ValueError): self.run_gate()
 

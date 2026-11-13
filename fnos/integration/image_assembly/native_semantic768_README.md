@@ -90,7 +90,7 @@ embedding namespace is introduced.
 ## Verification and limits
 
 Run `python3 -m unittest fnos.tests.test_native_semantic768_staging -v`.
-24 tests passed on macOS and server146. They include disabled/native preservation,
+24 tests passed on macOS and build-server. They include disabled/native preservation,
 active staging with synthetic review/fixture assets, corruption and symlink
 rejection, frozen-runtime drift, failed atomic entry replacement, required
 production-budget evidence, model pairing, exact CPU argument fallback, private
@@ -98,7 +98,7 @@ runtime files, refusal to start CPU after a running service fails, and rejection
 of dormant candidate files already present in a disabled root filesystem.
 
 Server evidence is in
-`/data/disk1/rdk-x5-fnos-guosheng/native-semantic768-staging-r1-20261110/`:
+`/srv/fnos-build/native-semantic768-staging-r1-20261110/`:
 `offline-acceptance.json`, `unittest.log`, and `real-cpu-root/`.
 The original evidence copy is `semantic768_staging_offline_acceptance.json`;
 `semantic768_staging_offline_acceptance_r2.json` supersedes its source hashes

@@ -1,0 +1,72 @@
+{
+  "schema": "fnos-x5-accel-compat/v1",
+  "module": {
+    "name": "fnos-x5-accel",
+    "version": "0.3.0"
+  },
+  "platform": {
+    "machine": "aarch64",
+    "kernel_releases": [
+      "6.18.0"
+    ],
+    "photos": {
+      "modules": [
+        "bpu_framework",
+        "bpu_cores",
+        "bpu_hw_io_x5"
+      ],
+      "devices": [
+        "/dev/bpu_core0"
+      ],
+      "paths": [
+        "/usr/lib/hbbpu/libdnn.so",
+        "/usr/lib/hbbpu/libhbrt_bayes_aarch64.so"
+      ]
+    },
+    "media": {
+      "paths": [
+        "/usr/hobot/lib/firmware/libmm/chagall.bin"
+      ]
+    }
+  },
+  "native": {
+    "photos_entry": {
+      "path": "usr/trim/lib/ai_manager/com.trim.face_det/cp311/face_det.bin",
+      "sha256": "b7fe842b4b6dd1a4f1af84afcb5b5972086633b02ee4555aa051d522031860c4"
+    },
+    "ai_manager": {
+      "path": "usr/trim/bin/ai_manager",
+      "sha256": "47ea984c39ba920aeca003a6ad838a85aa6fb9ae1e8670305cf97698196d094f"
+    },
+    "media_codec": {
+      "path": "usr/trim/lib/mediasrv/lib/libavcodec.so.62",
+      "sha256": "cd8067ed571b436cb470b7733e953c705f0635a55c02b58c58dc8962b18708bc"
+    },
+    "media_unit": {
+      "path": "etc/systemd/system/mediasrv.service",
+      "sha256": "ef43c271aae4cdb45f4c2f39d7e360a26c7b7783ac483c2e7a7df2ee733bd15a"
+    }
+  },
+  "apps": {
+    "trim.photos": {
+      "versions": [
+        {
+          "version": "0.9.14",
+          "verified_on": "2026-11-12",
+          "binary_sha256": "d0916570db8cecab9c6e6e76dc5ddcc2cfa340834dd2a36c106d9cb2556fe976",
+          "defaults": "supported",
+          "notes": "AI configuration columns/trigger and postgres directory ACL reviewed"
+        }
+      ]
+    },
+    "trim.media": {
+      "versions": [
+        {
+          "version": "0.9.8-1",
+          "verified_on": "2026-11-12",
+          "notes": "mediasrv unit/ABI pinned by media_unit and media_codec hashes, not by app version alone"
+        }
+      ]
+    }
+  }
+}

@@ -71,9 +71,9 @@ Run under **fakeroot** with private `btrfs-progs`, `u-boot-tools`, and
 final image to `/data`:
 
 ```sh
-B=/data/disk1/rdk-x5-fnos-guosheng/assembly-20261106
-A=/data/disk1/rdk-x5-fnos-guosheng/artifacts/recovered-fix19-d255-20261105
-SRC=/data/disk1/rdk-x5-fnos-guosheng/fnos-input-audit-20261106/work/audit/rootfs-p2.btrfs
+B=/srv/fnos-build/assembly-20261106
+A=/srv/fnos-build/artifacts/recovered-fix19-d255-20261105
+SRC=/srv/fnos-build/fnos-input-audit-20261106/work/audit/rootfs-p2.btrfs
 cd "$B/tool"
 fakeroot -- env \
   PATH=/tmp/btrfs-tool/root/usr/bin:/tmp/btrfs-tool/root/usr/sbin:/tmp/uboot-tool/root/usr/bin:/tmp/fuse2fs-tool/root/usr/bin:$PATH \
@@ -142,3 +142,13 @@ describes the original r3 image assembly, not the later live integration.
 
 Real X5 boot, SPI Miniboot/U-Boot, network, SMB, upgrade, firmware/BPU/GPU, and
 physical media write. Static acceptance is pending Codex re-review.
+
+## 独立 ARM64 加速模块（2026-11-12）
+
+`product_inputs.py` 在完整镜像内放置同一份 in-place `bundle.json` /
+`compat.json`（不复制大模型树）；`product_bootstrap.py --repair-runtime` 同时
+检查相册和影视的已知原生哈希。独立 `.fpk` 由
+`fnos/integration/acceleration/build_module.py` 从已组装 root 收集同一批文件，
+安装/升级/卸载入口见
+[`fnos/integration/acceleration/module/README.md`](../acceleration/module/README.md)。
+当前 r24 的真板测试范围见 [仓库验收记录](../../../TESTED.md)。

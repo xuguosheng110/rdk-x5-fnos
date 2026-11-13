@@ -109,7 +109,7 @@ class NativeMediaStagingTests(unittest.TestCase):
             native_media.verify_native_media(self.root, report)
 
 
-SERVER_ROOT = Path('/data/disk1/rdk-x5-fnos-guosheng')
+SERVER_ROOT = Path('/srv/fnos-build')
 SERVER_ONLY = platform.system() == 'Linux' and Path(__file__).resolve().is_relative_to(SERVER_ROOT)
 
 

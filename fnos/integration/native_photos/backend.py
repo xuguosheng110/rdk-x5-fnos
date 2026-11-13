@@ -21,7 +21,8 @@ IMAGE_SHA256 = "99f54b25c74e3a9d19aaf0d258d8a6939f46e2752d43673881565015ef8ae1e1
 TEXT_SHA256 = "d2a53b45c90c4e66c139143d19ff76799288d6114ed981726f45364d1cad9298"
 
 
-def read_allowed_image(path: str, roots, *, max_bytes=32 * 1024 * 1024) -> bytes:
+def read_allowed_image(path: str, roots, *, max_bytes=32 * 1024 * 1024,
+                       native_meta=Path('/var/apps/trim.photos/meta')) -> bytes:
     """Open a regular file under explicit roots, rejecting every symlink component.
 
     Walk directory descriptors to avoid a realpath/check/open race. Does not
@@ -35,6 +36,17 @@ def read_allowed_image(path: str, roots, *, max_bytes=32 * 1024 * 1024) -> bytes
     candidate = Path(path)
     if callable(roots):
         roots = roots()
+    # Native Photos submits original-thumbnail aliases for larger images.
+    # Resolve only its reviewed metadata link into a currently mounted volume;
+    # the descriptor walk below still rejects links inside the thumbnail tree.
+    prefix = '/var/apps/trim.photos/meta/data/thumb/'
+    if path.startswith(prefix):
+        meta = Path(native_meta)
+        target = meta.readlink() if meta.is_symlink() else meta
+        if target not in [Path(r) / '@appmeta/trim.photos' for r in roots]:
+            raise PermissionError('unreviewed native thumbnail directory')
+        candidate = target / 'data/thumb' / path[len(prefix):]
+        parts = candidate.parts[1:]
     if not any(candidate.is_relative_to(Path(r)) and candidate != Path(r) for r in roots):
         raise PermissionError("image outside configured roots")
     fd = os.open("/", os.O_RDONLY | os.O_DIRECTORY)

@@ -10,6 +10,7 @@ from pathlib import Path
 import shutil
 
 from .platform_runtime import _destination, _prepare_parent
+from . import runtime_profile
 
 ENTRY = Path('usr/trim/lib/ai_manager/com.trim.face_det/cp311/face_det.bin')
 ENTRY_SHA = 'b7fe842b4b6dd1a4f1af84afcb5b5972086633b02ee4555aa051d522031860c4'
@@ -18,7 +19,7 @@ WORKER_SHA = 'a05bd0d2748bde0b38738052f99a7a6b76c22406f65c0b3c4989e47eee82c48e'
 DETECTOR_SHA = '5838f7fe053675b1c7a08b633df49e7af5495cee0493c7dcf6697200b85b5b91'
 BOX_SHA = 'bae0c2ec8c1c66d2c2ff4e51877dbe2514a5aea3fb714856897c4c696d6d0729'
 LANDMARK_SHA = 'bf0316c870ddd7854af368f310b03bc33c8a756d8ddae4d3aba5e2a1b564a102'
-DETECTION_WORKER_SHA = '05831b336cc63b2deb526f860a73b05c8fd1f8cf2611b87f858886ede1e13cf3'
+DETECTION_WORKER_SHA = '714618978b83194f5d4a703848282a08712ddcdb4c0b69dd72ee1852de78cae1'
 MANIFEST = Path('usr/share/fnos-x5/native-photos-manifest.json')
 NAMESPACE = 'drobotics-faceid128-aa3ab3230f0957bc'
 
@@ -28,7 +29,7 @@ def digest(path):
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
 
-def stage_native_photos(root, assets):
+def stage_native_photos(root, assets, *, profile='runtime'):
     root, assets = Path(root).resolve(), Path(assets).resolve()
     if root == Path('/') or not (root / 'etc/os-release').is_file():
         raise ValueError('offline root filesystem required')
@@ -51,6 +52,16 @@ def stage_native_photos(root, assets):
         names.add(name)
         if name not in expected and (relative.parts[0] != 'python' or len(relative.parts) < 2):
             raise ValueError('unexpected photos asset: ' + name)
+        if relative.parts[0] == 'python':
+            license_target = runtime_profile.distinfo_license_source(name)
+            if profile == 'runtime' and license_target:
+                source = _destination(assets, relative)
+                if source.is_symlink() or not source.is_file() or digest(source) != row['sha256']:
+                    raise ValueError('photos asset hash mismatch: ' + name)
+                inputs.append((source, license_target, 0o644))
+                continue
+            if not runtime_profile.python_asset_allowed(name, profile):
+                continue
         source = _destination(assets, relative)
         if source.is_symlink() or not source.is_file() or digest(source) != row['sha256']:
             raise ValueError('photos asset hash mismatch: ' + name)

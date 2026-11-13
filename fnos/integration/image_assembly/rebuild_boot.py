@@ -22,7 +22,7 @@ from .assemble import (
     MIB, P2_START_LBA, SEC, harden_boot_cmd, sha256_image_regions, sha256, verify_final,
 )
 
-B = Path("/data/disk1/rdk-x5-fnos-guosheng/assembly-20261106")
+B = Path("/srv/fnos-build/assembly-20261106")
 
 
 def log(msg: str) -> None:

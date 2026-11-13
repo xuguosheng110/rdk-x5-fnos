@@ -1,0 +1,40 @@
+{
+  "schema": "fnos-x5-runtime-model-inventory/v1",
+  "profile": "runtime-bpu-face+onnx-compat+onnx-semantic",
+  "total_entries": 6,
+  "metadata_entries": 0,
+  "model_and_config_files": 6,
+  "source_inventory_sha256": "e01ec056e4c2d26bffde9c9c50a2c828b05030daac238e56e7fa379e4fa1f9a8",
+  "required_files": [
+    {
+      "path": "ai-models/face-model-1.0.1/det.onnx",
+      "bytes": 16923827,
+      "sha256": "5838f7fe053675b1c7a08b633df49e7af5495cee0493c7dcf6697200b85b5b91"
+    },
+    {
+      "path": "ai-models/face-model-1.0.1/genderage.onnx",
+      "bytes": 1322532,
+      "sha256": "4fde69b1c810857b88c64a335084f1c3fe8f01246c9a191b48c7bb756d6652fb"
+    },
+    {
+      "path": "ai-models/face-model-1.0.1/rec.onnx",
+      "bytes": 174383860,
+      "sha256": "4c06341c33c2ca1f86781dab0e829f88ad5b64be9fba56e56bc9ebdefc619e43"
+    },
+    {
+      "path": "ai-models/img2vec-medium-model-1.0.0/img2vec.onnx",
+      "bytes": 346197387,
+      "sha256": "73a177536d297a3e3767ee1cd55f4ab9045bd0c2a4ac9a584fb77eaf3b7e1988"
+    },
+    {
+      "path": "ai-models/txt2vec-medium-model-1.0.0/sp.model",
+      "bytes": 2270960,
+      "sha256": "b7fe3bcc8d284fcb782691411e8b6fd4f45d7245565b094de6ab795e66bcd32f"
+    },
+    {
+      "path": "ai-models/txt2vec-medium-model-1.0.0/txt2vec.onnx",
+      "bytes": 700392391,
+      "sha256": "d4712c45f5c5fba9e5603beba03415f06f1d6755d098e781ffcb0a79f4d65a44"
+    }
+  ]
+}

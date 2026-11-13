@@ -1,0 +1,88 @@
+{
+  "total_entries": 23,
+  "metadata_entries": 7,
+  "model_and_config_files": 16,
+  "metadata_bytes": 1232,
+  "required_files": [
+    {
+      "path": "ai-models/face-model-1.0.1/det.bin",
+      "bytes": 16903368,
+      "sha256": "1b98fbc38c7dfbe89b6dfc0e0440c13084fc726de150fe2b87578531b232d43d"
+    },
+    {
+      "path": "ai-models/face-model-1.0.1/det.onnx",
+      "bytes": 16923827,
+      "sha256": "5838f7fe053675b1c7a08b633df49e7af5495cee0493c7dcf6697200b85b5b91"
+    },
+    {
+      "path": "ai-models/face-model-1.0.1/det.xml",
+      "bytes": 167724,
+      "sha256": "2fc638700580bbcba4f49ddd9762a25cdfb6abf26789e2181d2a593609754c87"
+    },
+    {
+      "path": "ai-models/face-model-1.0.1/genderage.bin",
+      "bytes": 1256820,
+      "sha256": "ab0c2ec642f1951c021b42510090a674b3f52a19be923af8c91c3f677d6b2fdd"
+    },
+    {
+      "path": "ai-models/face-model-1.0.1/genderage.onnx",
+      "bytes": 1322532,
+      "sha256": "4fde69b1c810857b88c64a335084f1c3fe8f01246c9a191b48c7bb756d6652fb"
+    },
+    {
+      "path": "ai-models/face-model-1.0.1/genderage.xml",
+      "bytes": 88922,
+      "sha256": "dde9a636a8fc7ba690324628983a5bbbe1aa51de1e443f05a07f441f89ee4e40"
+    },
+    {
+      "path": "ai-models/face-model-1.0.1/rec.bin",
+      "bytes": 174308624,
+      "sha256": "a3e4329eb13db555c72ae458efc0495805b6467109c95721aef114f3133d93fd"
+    },
+    {
+      "path": "ai-models/face-model-1.0.1/rec.onnx",
+      "bytes": 174383860,
+      "sha256": "4c06341c33c2ca1f86781dab0e829f88ad5b64be9fba56e56bc9ebdefc619e43"
+    },
+    {
+      "path": "ai-models/face-model-1.0.1/rec.xml",
+      "bytes": 200093,
+      "sha256": "e881e65b103bc4e7c9807c69bb9b9742078969d5dbaa3c9a71118dc8f491a9b4"
+    },
+    {
+      "path": "ai-models/img2vec-medium-model-1.0.0/img2vec.bin",
+      "bytes": 345935124,
+      "sha256": "b745bec662a24799487e8ceb4f4ba73a75cd8c41b81bd1cf090de35bc392c230"
+    },
+    {
+      "path": "ai-models/img2vec-medium-model-1.0.0/img2vec.onnx",
+      "bytes": 346197387,
+      "sha256": "73a177536d297a3e3767ee1cd55f4ab9045bd0c2a4ac9a584fb77eaf3b7e1988"
+    },
+    {
+      "path": "ai-models/img2vec-medium-model-1.0.0/img2vec.xml",
+      "bytes": 489516,
+      "sha256": "f9ee7f536cfcc9f7576c0cfb45d8c1ac28b37ea5688d910ac751d65f5f587c70"
+    },
+    {
+      "path": "ai-models/txt2vec-medium-model-1.0.0/sp.model",
+      "bytes": 2270960,
+      "sha256": "b7fe3bcc8d284fcb782691411e8b6fd4f45d7245565b094de6ab795e66bcd32f"
+    },
+    {
+      "path": "ai-models/txt2vec-medium-model-1.0.0/txt2vec.bin",
+      "bytes": 700133604,
+      "sha256": "bcc5a008f04ddc35363fc388795e7d5caeb5541bfdc19e23a66b7e470ddac17d"
+    },
+    {
+      "path": "ai-models/txt2vec-medium-model-1.0.0/txt2vec.onnx",
+      "bytes": 700392391,
+      "sha256": "d4712c45f5c5fba9e5603beba03415f06f1d6755d098e781ffcb0a79f4d65a44"
+    },
+    {
+      "path": "ai-models/txt2vec-medium-model-1.0.0/txt2vec.xml",
+      "bytes": 476594,
+      "sha256": "6eb1733075c748a1ad5ebfabd7ea107bc11009eef85b61f347ecfc81a1627a77"
+    }
+  ]
+}

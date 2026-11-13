@@ -7,7 +7,7 @@
 已构建的生产文件：
 
 ```text
-server146:/data/disk1/rdk-x5-fnos-guosheng/ram-deploy-20261110-r1/ram-deploy-helper-aarch64
+build-server:/srv/fnos-build/ram-deploy-20261110-r1/ram-deploy-helper-aarch64
 bytes: 852072
 SHA256: afd3a217d64546777f498a7c2f1800ed3895cddf51dba22442b088670131853d
 ```

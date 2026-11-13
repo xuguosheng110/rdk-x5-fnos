@@ -1,0 +1,3 @@
+#!/bin/bash
+# User data, indexes, native app data and photos are deliberately untouched.
+exit 0

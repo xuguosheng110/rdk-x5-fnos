@@ -117,6 +117,12 @@ static int open_encoder(AVCodecContext *ctx, const AVCodec *original,
             ctx->bit_rate > 40000000 || ctx->rc_max_rate > 40000000)
             goto native;
     }
+    /* mediasrv thumbnail extraction requests INT_MAX (no periodic keyframes).
+     * The hardware encoder accepts at most 2047. Preserve native semantics
+     * and avoid a failed hardware open for any larger explicit GOP. */
+    reason = "GOP size exceeds the hardware limit";
+    if (ctx->gop_size > 2047)
+        goto native;
     reason = "software-specific encoder options";
     if (ctx->priv_data && original->priv_class) {
         ret = av_opt_serialize(ctx->priv_data, AV_OPT_FLAG_ENCODING_PARAM,

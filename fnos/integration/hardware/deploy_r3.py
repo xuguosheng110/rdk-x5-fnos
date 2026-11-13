@@ -66,7 +66,7 @@ def main():
     ap.add_argument("--image-size",required=True,type=int)
     ap.add_argument("--acceptance",required=True,type=Path)
     ap.add_argument("--reviewed-target",required=True,type=Path)
-    ap.add_argument("--remote-dir",default="/data/disk1/rdk-x5-fnos-guosheng/backups/20261106-sd")
+    ap.add_argument("--remote-dir",default="/srv/fnos-build/backups/20261106-sd")
     ap.add_argument("--remote-name",default="sd-current-20261106.img")
     ap.add_argument("--cache-status",default="fnos/coordination/r3-local-cache-20261106.json")
     ap.add_argument("--cache-timeout",type=int,default=10800)

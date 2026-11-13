@@ -1,0 +1,5 @@
+#!/bin/bash
+set -u
+[ "$(uname -m)" = "aarch64" ] || { echo "仅支持 aarch64" > "${TRIM_TEMP_LOGFILE:-/dev/stderr}"; exit 1; }
+[ "$(uname -r)" = "6.18.0" ] || { echo "仅支持已验收的 Linux 6.18.0；未替换内核" > "${TRIM_TEMP_LOGFILE:-/dev/stderr}"; exit 1; }
+exit 0

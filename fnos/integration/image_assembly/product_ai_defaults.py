@@ -118,10 +118,37 @@ def seed_photos_database(path):
         connection.close()
 
 
+def ensure_postgres_access(root=Path('/'), runner=subprocess.run):
+    """Allow the native vector DB user to traverse only reviewed app directories."""
+    root = Path(root).resolve()
+    app = root / 'var/apps/trim.photos'
+    check_binary(app / 'target/trim-photos', PHOTOS_SHA)
+    paths = []
+    for name, category in (('var', '@appdata'), ('meta', '@appmeta')):
+        target = (app / name).resolve(strict=True)
+        allowed = [root / 'usr/local/apps' / category / 'trim.photos']
+        allowed += [v / category / 'trim.photos' for v in root.glob('vol[0-9]*')
+                    if re.fullmatch(r'vol[1-9][0-9]*', v.name) and not v.is_symlink()]
+        if target not in allowed or not target.is_dir():
+            raise RuntimeError('unexpected native Photos directory: ' + name)
+        paths.append(str(target))
+    before = runner([str(root / 'usr/bin/getfacl'), '-cp', *paths],
+                    capture_output=True, text=True, timeout=30)
+    if before.returncode:
+        raise RuntimeError('native Photos directory ACL inspection failed')
+    changed = (before.stdout or '').splitlines().count('user:postgres:r-x') != len(paths)
+    result = runner([str(root / 'usr/bin/setfacl'), '-m', 'u:postgres:rx', *paths],
+                    capture_output=True, text=True, timeout=30)
+    if result.returncode:
+        raise RuntimeError('native Photos postgres directory access failed')
+    return {'postgres_access': 'read/traverse app data and metadata directories', 'changed': changed}
+
+
 def seed_photos(*, root=Path('/')):
     root = Path(root).resolve()
     app = root / 'var/apps/trim.photos'
     check_binary(app / 'target/trim-photos', PHOTOS_SHA)
+    ensure_postgres_access(root)
     db = (app / 'var/db/photo.db').resolve(strict=True)
     # Native installations use /volN; the original ARM image also has a
     # legacy /usr/local/apps data tree. No arbitrary external symlink target.

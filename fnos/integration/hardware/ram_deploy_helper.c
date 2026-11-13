@@ -1,6 +1,6 @@
 /* RAM-only SD writer. Production has no regular-file or fault-injection mode.
  * SHA-256 is delegated to the pinned rescue BusyBox, never implemented here.
- * Build on server146: aarch64-linux-gnu-gcc -static -O2 -Wall -Wextra -Werror
+ * Build on build-server: aarch64-linux-gnu-gcc -static -O2 -Wall -Wextra -Werror
  *                    ram_deploy_helper.c -o ram_deploy_helper
  */
 #define _GNU_SOURCE

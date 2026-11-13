@@ -92,6 +92,28 @@ static int roi_from_box(const float *b,hbDNNRoi *r) {
     r->left+=(r->left&1);r->top+=(r->top&1);r->right-=!(r->right&1);r->bottom-=!(r->bottom&1);
     return r->right-r->left>=16 && r->bottom-r->top>=16;
 }
+/* The resizer step limit is 262143 (~4x). A 128px landmark input
+ * cannot consume a full-frame ROI directly. Keep the whole ROI by using
+ * a half-resolution NV12 source only for those large faces. */
+static int prepare_half(const hbDNNTensor *src,hbDNNTensor *dst) {
+    const uint8_t *y=src->sysMem[0].virAddr,*uv=src->sysMem[1].virAddr;
+    uint8_t *dy=dst->sysMem[0].virAddr,*duv=dst->sysMem[1].virAddr;
+    for(int r=0;r<HEIGHT/2;r++)for(int c=0;c<WIDTH/2;c++) {
+        int k=2*r*WIDTH+2*c;
+        dy[r*(WIDTH/2)+c]=(y[k]+y[k+1]+y[k+WIDTH]+y[k+WIDTH+1]+2)/4;
+    }
+    for(int r=0;r<HEIGHT/4;r++)for(int c=0;c<WIDTH/4;c++)for(int ch=0;ch<2;ch++) {
+        int k=2*r*WIDTH+4*c+ch;
+        duv[r*(WIDTH/2)+2*c+ch]=(uv[k]+uv[k+2]+uv[k+WIDTH]+uv[k+WIDTH+2]+2)/4;
+    }
+    SDK(hbSysFlushMem(&dst->sysMem[0],HB_SYS_MEM_CACHE_CLEAN));
+    SDK(hbSysFlushMem(&dst->sysMem[1],HB_SYS_MEM_CACHE_CLEAN));
+    return 0;
+}
+static int needs_half(const hbDNNRoi *r) {
+    return ((int64_t)(r->right-r->left)*65536+63)/127>262143 ||
+           ((int64_t)(r->bottom-r->top)*65536+63)/127>262143;
+}
 static void release(Model *m) {
     for(int i=0;i<2;i++) if(m->in.sysMem[i].virAddr) hbSysFreeMem(&m->in.sysMem[i]);
     for(int i=0;i<m->outputs;i++) if(m->out[i].sysMem[0].virAddr) hbSysFreeMem(&m->out[i].sysMem[0]);
@@ -101,8 +123,15 @@ int main(int argc,char **argv) {
     if(argc!=3)return 2;
     int fd=dup(STDOUT_FILENO);if(fd<0 || dup2(STDERR_FILENO,STDOUT_FILENO)<0)return 2;
     FILE *wire=fdopen(fd,"wb");if(!wire)return 2;setvbuf(wire,NULL,_IONBF,0);
-    Model det={0},lmk={0};int rc=1;
+    Model det={0},lmk={0};hbDNNTensor half={0};int rc=1;
     if(initialize(&det,argv[1],9,WIDTH,HEIGHT) || initialize(&lmk,argv[2],2,128,128))goto done;
+    half.properties=det.in.properties;
+    half.properties.validShape.dimensionSize[2]=HEIGHT/2;
+    half.properties.validShape.dimensionSize[3]=WIDTH/2;
+    half.properties.alignedShape=half.properties.validShape;
+    half.properties.alignedByteSize/=4;
+    if(hbSysAllocCachedMem(&half.sysMem[0],PIXELS/4) ||
+       hbSysAllocCachedMem(&half.sysMem[1],PIXELS/8))goto done;
     if(fwrite("X5FD",1,4,wire)!=4)goto done;
     for(;;) {
         size_t n=fread(det.in.sysMem[0].virAddr,1,PIXELS,stdin);
@@ -115,16 +144,30 @@ int main(int argc,char **argv) {
         if(!isfinite(bytecount) || bytecount<0 || bytecount>MAX_FACES*24 || (int)bytecount%24 || bytecount!=(float)(int)bytecount)break;
         int boxes=(int)bytecount/24;if((boxes+1)*24>t->properties.alignedByteSize)break;
         float records[MAX_FACES][5+LANDMARKS*3];uint32_t count=0;
+        int half_ready=0;
         for(int i=0;i<boxes;i++) {
             float *b=raw+6*(i+1);hbDNNRoi roi;
             if(b[4]<.1f || !roi_from_box(b,&roi))continue;
-            if(infer(&lmk,&det.in,&roi))goto done;
+            int scaled=needs_half(&roi);
+            hbDNNTensor *input=&det.in;
+            if(scaled) {
+                if(!half_ready && prepare_half(&det.in,&half))goto done;
+                half_ready=1;input=&half;
+                roi.left=(roi.left/2)&~1;roi.top=(roi.top/2)&~1;
+                roi.right=(roi.right/2)|1;roi.bottom=(roi.bottom/2)|1;
+            }
+            if(infer(&lmk,input,&roi))goto done;
             memcpy(records[count],b,5*sizeof(float));
             if(parse_landmarks(&lmk,&roi,records[count]+5))goto done;
+            if(scaled)for(int k=0;k<LANDMARKS;k++) {
+                records[count][5+3*k]*=2;
+                records[count][6+3*k]*=2;
+            }
             count++;
         }
         if(fwrite(&count,4,1,wire)!=1 || fwrite(records,sizeof(records[0]),count,wire)!=count)break;
     }
 done:
+    for(int i=0;i<2;i++)if(half.sysMem[i].virAddr)hbSysFreeMem(&half.sysMem[i]);
     release(&lmk);release(&det);fclose(wire);return rc;
 }

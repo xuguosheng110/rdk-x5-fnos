@@ -14,7 +14,7 @@ import platform
 import shutil
 import subprocess
 
-SERVER_ROOT = Path('/data/disk1/rdk-x5-fnos-guosheng')
+SERVER_ROOT = Path('/srv/fnos-build')
 
 
 def sha(path):

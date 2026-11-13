@@ -26,7 +26,7 @@ import time
 from fnos.lab.locks import board_lock, adopt_inherited_lock, board_lock_path
 
 SERVER = 'guosheng@192.0.2.10'
-SERVER_ROOT = PurePosixPath('/data/disk1/rdk-x5-fnos-guosheng')
+SERVER_ROOT = PurePosixPath('/srv/fnos-build')
 BOARD = 'x5-lab-01'
 CID = '035344534b333247854bf6868b01a200'
 CARD_BYTES = 31914983424

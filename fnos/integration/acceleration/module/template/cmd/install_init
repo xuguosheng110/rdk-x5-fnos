@@ -1,0 +1,9 @@
+#!/bin/bash
+# Runs before the package files are copied.  Only read-only platform checks here.
+set -u
+fail() { echo "$*" > "${TRIM_TEMP_LOGFILE:-/dev/stderr}"; exit 1; }
+[ "$(uname -m)" = "aarch64" ] || fail "本模块仅支持 RDK X5 ARM64 (aarch64)。"
+[ "$(uname -r)" = "6.18.0" ] || fail "本模块仅支持已验收的 Linux 6.18.0；不会替换当前内核。"
+[ -d /sys/module/bpu_framework ] || fail "缺少 BPU 驱动 bpu_framework；请先使用匹配的完整镜像。"
+[ -d /sys/module/bpu_cores ] || fail "缺少 BPU 驱动 bpu_cores；请先使用匹配的完整镜像。"
+exit 0

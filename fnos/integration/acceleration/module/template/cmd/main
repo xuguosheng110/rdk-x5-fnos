@@ -1,0 +1,16 @@
+#!/bin/bash
+set -u
+case "$1" in
+  start|stop) exit 0 ;;
+  status)
+    python3 - "${FNOS_ACCEL_STATE:-/var/lib/fnos-x5/accel/state.json}" <<'PY'
+import json, sys
+try:
+    state = json.load(open(sys.argv[1]))
+except Exception:
+    raise SystemExit(3)
+raise SystemExit(0 if state.get('status') in ('installed', 'upgrading') else 3)
+PY
+    ;;
+  *) exit 1 ;;
+esac

@@ -1,0 +1,9 @@
+#!/bin/bash
+set -u
+APPDEST="${TRIM_APPDEST:-/var/apps/fnos-x5-accel/target}"
+LOG="${TRIM_TEMP_LOGFILE:-/dev/stderr}"
+python3 "$APPDEST/module_install.py" --install --package-root "$APPDEST" || {
+  rc=$?
+  echo "加速模块安装未完成，详见 $LOG 或 /var/lib/fnos-x5/accel/module-health.json" >> "$LOG"
+  exit "$rc"
+}

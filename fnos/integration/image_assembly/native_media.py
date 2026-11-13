@@ -6,6 +6,7 @@ import shlex
 import textwrap
 
 from .platform_runtime import _destination, _prepare_parent
+from .media_web import SHIM
 
 NATIVE_CODEC = 'usr/trim/lib/mediasrv/lib/libavcodec.so.62'
 NATIVE_SHA256 = 'cd8067ed571b436cb470b7733e953c705f0635a55c02b58c58dc8962b18708bc'
@@ -138,6 +139,7 @@ def stage_native_media(root: Path, library: Path, *, enable_decode=False):
                     preload.append(part)
     plan = {
         target: data,
+        str(SHIM): (Path(__file__).parents[1] / 'native_media' / SHIM.name).read_bytes(),
         # Neutralise the obsolete preload file as well as removing its unit use.
         'etc/fnos-x5/native-media.env': b'# VPU environment is assigned only by native_media_launcher.py after ABI verification.\n',
         LAUNCHER: _launcher_source(native_codec='/' + NATIVE_CODEC,

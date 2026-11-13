@@ -1,0 +1,4 @@
+#!/bin/bash
+set -u
+APPDEST="${TRIM_APPDEST:-/var/apps/fnos-x5-accel/target}"
+python3 "$APPDEST/module_install.py" --upgrade --package-root "$APPDEST" || exit $?

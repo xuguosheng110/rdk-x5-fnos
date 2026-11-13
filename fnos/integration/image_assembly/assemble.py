@@ -12,7 +12,8 @@ The build is intentionally conservative:
   installed;
 * a minimal AArch64 initramfs carries the X5 modules and busybox;
 * the source fnOS boot chain is replaced, not copied;
-* first-boot resize and updatemgr are disabled by systemd conditions.
+* vendor resize and system-update units are masked. An X5-specific service
+  grows the boot SD without touching data disks.
 """
 
 from __future__ import annotations
@@ -39,6 +40,7 @@ from .native_media import stage_native_media, verify_native_media
 from .native_photos import stage_native_photos, verify_native_photos
 from .native_semantic768 import stage_native_semantic768, verify_native_semantic768
 from .product_inputs import stage_product_inputs, verify_product_inputs
+from . import root_expand
 
 MIB = 1024 * 1024
 GIB = 1024 * 1024 * 1024
@@ -382,13 +384,19 @@ def prepare_rootfs(
     write_text(
         root / "etc/fnos-x5/README.txt",
         "X5 adaptation guard files.\n"
-        "allow-auto-resize/allow-updatemgr do not exist: first-boot resize and\n"
-        "updatemgr are disabled by systemd ConditionPathExists drop-ins.\n"
-        "Source identity is kept in source-identity.txt; this is not a Rockchip board.\n",
+        "Vendor resize and update units are masked.\n"
+        "fnos-x5-root-expand.service grows the X5 system SD.\n"
+        "The source platform is recorded in source-identity.txt.\n",
     )
 
     # 6) Default-deny masks for update/resize; preserve the original units.
     unit_state = mask_boot_affecting_units(root)
+    write_text(root / root_expand.SCRIPT, Path(root_expand.__file__).read_text())
+    write_text(root / root_expand.UNIT, root_expand.UNIT_TEXT)
+    enabled = root / root_expand.ENABLED
+    enabled.parent.mkdir(parents=True, exist_ok=True)
+    enabled.symlink_to('../' + root_expand.UNIT.name)
+    run(['chown', '-h', '0:0', str(enabled)])
 
     # 7) Keep the source hostname and userspace; only the board identity changes.
     return {
@@ -476,7 +484,7 @@ def build_ext4(root: Path, dest: Path, size_bytes: int, fs_uuid: str) -> dict:
         raise RuntimeError("mke2fs not installed")
     run(
         [mke2fs, "-q", "-t", "ext4", "-F", "-U", fs_uuid, "-L", "fnos-x5-rootfs", "-m", "1", "-d", str(root), str(dest)],
-        timeout=1800,
+        timeout=7200,
     )
     dumpe2fs = shutil.which("dumpe2fs")
     info = run([dumpe2fs, "-h", str(dest)], timeout=120).stdout
@@ -940,6 +948,17 @@ def verify_final(image: Path, work: Path, expected_p1_sha256: str | None = None,
         # Explicit masked-unit symlink check, independent of systemctl.
         checks["mask_symlinks"] = {u: (mount / "etc/systemd/system" / u).is_symlink() and os.readlink(mount / "etc/systemd/system" / u) == "/dev/null" for u in MASK_UNITS}
         checks["mask_symlinks_all"] = all(checks["mask_symlinks"].values())
+        expand_unit = mount / root_expand.UNIT
+        expand_script = mount / root_expand.SCRIPT
+        expand_link = mount / root_expand.ENABLED
+        checks["x5_root_expand_enabled"] = (
+            expand_unit.is_file() and expand_unit.read_text() == root_expand.UNIT_TEXT
+            and expand_script.is_file()
+            and expand_script.read_bytes() == Path(root_expand.__file__).read_bytes()
+            and expand_link.is_symlink()
+            and os.readlink(expand_link) == '../' + root_expand.UNIT.name
+            and not (mount / root_expand.DONE.relative_to('/')).exists()
+        )
         checks["masked_source_preserved"] = all((mount / "etc/fnos-x5/disabled-units" / u).is_file() for u in ("resize-rootfs.service", "updatemgr.service"))
         checks["old_negative_condition_absent"] = not any((mount / "etc/systemd/system" / u / "90-x5-guard.conf").exists() for u in ("resize-rootfs.service", "updatemgr.service"))
         checks["initrd_size_positive"] = 0 < initrd_size <= INITRD_MAX
@@ -949,7 +968,7 @@ def verify_final(image: Path, work: Path, expected_p1_sha256: str | None = None,
             "initrd_gzip", "initrd_mountpoints", "initrd_busybox", "initrd_btrfs",
             "boot_scr_image", "boot_cmd_has_size_arg", "boot_cmd_fail_closed", "boot_cmd_no_colon", "boot_cmd_success_echo", "live_uboot_lmb_avoided",
             "boot_cmd_explicit_addrs", "boot_cmd_initrd_relocation", "boot_cmd_initrd_max", "initrd_size_positive", "masked_source_preserved", "old_negative_condition_absent", "busybox_uid0", "busybox_aarch64",
-            "image_arm64", "source_identity_kept", "all_units_masked", "mask_symlinks_all",
+            "image_arm64", "source_identity_kept", "all_units_masked", "mask_symlinks_all", "x5_root_expand_enabled",
             "core_services_retained", "load_ranges_no_overlap", "load_ranges_within_dram", "reserved_memory_avoided", "selected_dtb_matches", "boot_cmd_board_0302", "kernel_fdt_load_checked", "no_rk_artifacts",
         ]
         if expected_runtime is not None:
@@ -1012,6 +1031,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--native-photos-assets", type=Path, help="embed pinned FaceID128 worker, model and Python runtime; requires --runtime-sources and --bpu-module")
     ap.add_argument("--product-inputs", type=Path, help="clean native app installers/model caches and automatic native installation after storage initialization")
     ap.add_argument("--native-semantic-cpu", action="store_true", help="record verified native 768D CPU default; do not install dormant BPU semantic payload")
+    ap.add_argument("--accel-profile", choices=("full", "runtime"), default="runtime",
+                    help="payload policy shared with the standalone FPK; runtime is the release default")
     ap.add_argument("--skip-restore", action="store_true")
     args = ap.parse_args(argv)
     if args.bpu_module and not args.runtime_sources:
@@ -1071,12 +1092,14 @@ def main(argv: list[str] | None = None) -> int:
                      "etc/systemd/system/mediasrv.service.d"):
             chown_root(root / path)
     if args.native_photos_assets:
-        prep["native_photos"] = stage_native_photos(root, args.native_photos_assets)
+        prep["native_photos"] = stage_native_photos(root, args.native_photos_assets,
+                                                    profile=args.accel_profile)
         for path in ("usr/lib/fnos-x5", "usr/share/fnos-x5", "etc/fnos-x5",
                      "usr/trim/lib/ai_manager/com.trim.face_det/cp311/face_det.bin"):
             chown_root(root / path)
     if args.product_inputs:
-        prep["product_inputs"] = stage_product_inputs(root, args.product_inputs)
+        prep["product_inputs"] = stage_product_inputs(root, args.product_inputs,
+                                                       accel_profile=args.accel_profile)
         # Include every product drop-in and factory identity path, not only
         # the original timer. Preserve unrelated application data ownership.
         report = prep['product_inputs']
@@ -1108,6 +1131,7 @@ def main(argv: list[str] | None = None) -> int:
     manifest = {
         "schema": "fnos-x5-assembly/v2",
         "release": args.release,
+        "payload_profile": args.accel_profile,
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
         "mode": "offline-private-image; fakeroot; final-p2 readback; no physical disk",
         "source": {
@@ -1142,7 +1166,7 @@ def main(argv: list[str] | None = None) -> int:
             "real board boot/network/SMB/upgrade not tested",
             ("X5 runtime embedded; native media/photos acceleration still requires integration"
              if args.runtime_sources else "X5 firmware files for optional wireless/GPU/BPU are not imported"),
-            "rootfs free space is fixed; no first-boot resize",
+            "X5 system SD first-boot expansion requires final-image board acceptance",
             "SPI Miniboot/U-Boot dependency not exercised",
         ],
         "note": "The candidate is Debian 12 userspace with fnOS trim 1.2.0701, not a fake ID=fnos os-release. Source R3S identity is retained under /etc/fnos-x5.",

@@ -1,0 +1,10 @@
+#!/bin/bash
+# Restore reviewed system files before the package target is removed.
+set -u
+TOOL=/var/lib/fnos-x5/accel/tool/module_install.py
+if [ -f "$TOOL" ]; then
+  python3 "$TOOL" --uninstall || exit $?
+elif [ -f "${TRIM_APPDEST:-}/module_install.py" ]; then
+  python3 "${TRIM_APPDEST}/module_install.py" --uninstall || exit $?
+fi
+exit 0

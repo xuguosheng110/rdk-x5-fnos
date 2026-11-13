@@ -88,7 +88,7 @@ def main():
     ap.add_argument("--device",required=True)
     ap.add_argument("--expect-bytes",type=int,default=EXPECTED)
     ap.add_argument("--expect-model",default="UMS disk 0")
-    ap.add_argument("--remote-dir",default="/data/disk1/rdk-x5-fnos-guosheng/backups/20261106-sd")
+    ap.add_argument("--remote-dir",default="/srv/fnos-build/backups/20261106-sd")
     ap.add_argument("--remote-name",default="sd-current-20261106.img")
     ap.add_argument("--evidence",type=Path,default=Path("fnos/logs/uboot-diagnosis-20261106/sd-backup-evidence.json"))
     ap.add_argument("--serial-port",default="/dev/cu.usbserial-13220")
