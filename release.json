@@ -91,5 +91,18 @@
     "native_media": "H.264 and HEVC web transcode; hardware encode and decode both observed; post-reboot short HEVC tail quality switch passed",
     "standalone_fpk": "0.3.5 clean Web installation and warm reboot follow-up passed",
     "installation_layout": "native Photos and Media programs and internal database remain on system partition; linked app metadata, AI models, original user media and standalone FPK app data use selected external volume"
+  },
+  "r26_candidate": {
+    "status": "image_and_source_archive_verified_board_pending",
+    "kernel_config_change": "FHANDLE n -> y",
+    "kernel_image_sha256": "044539fbf2d6760b389661b221ab1fe918e70860de0671d3dedb9309a2d0d741",
+    "kernel_config_sha256": "04bde2575e6a878ab34ec44aab6719e087622ef2a99808eadc0fbbbad87c013d",
+    "kernel_source_archive": {
+      "name": "rdk-x5-linux-6.18-r26-source.tar.gz",
+      "size": 269834983,
+      "sha256": "8eafd1d48d55b3cdcba7df643db099091d872b9aa9d152557c99bfe34a37a72c"
+    },
+    "image_offline_checks_passed": 50,
+    "native_smb_auto_export": "board_verification_pending"
   }
 }
