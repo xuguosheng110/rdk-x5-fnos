@@ -14,7 +14,7 @@
 </p>
 
 > [!IMPORTANT]
-> **v0.3.1 完整镜像已发布。** r27 在 RDK X5 真板通过首次设置、外置卷导入、个人/团队文件夹 SMB 自动共享、Wi-Fi、影视 VPU 和独立加速包 0.3.5 验收。 [下载 v0.3.1](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.3.1)：3 个镜像分卷 + `merge-image.py`、加速包 FPK、内核源码和 `SHA256SUMS`。新上传照片的 BPU 人脸自动索引待复验，见 [RELEASE_NOTES.md](RELEASE_NOTES.md)。
+> **v0.3.1 完整镜像已发布。** r27 在 RDK X5 真板通过首次设置、外置卷导入、个人/团队文件夹 SMB 自动共享、Wi-Fi、影视 VPU 和独立加速包 0.3.5 验收。 [下载 v0.3.1](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.3.1)：5 个镜像分卷、3 个加速包分卷、`merge-image.py`、内核源码和 `SHA256SUMS`。新上传照片的 BPU 人脸自动索引待复验，见 [RELEASE_NOTES.md](RELEASE_NOTES.md)。
 
 ## 快速开始
 
@@ -23,8 +23,8 @@ USB 数据盘**。系统卡安装系统及飞牛原生应用。照片、视频�
 符合 RDK 官方要求的电源。
 
 1. **下载并合并系统镜像。** 从 [v0.3.1 Release](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.3.1)
-   下载 3 个 `rdk-x5-fnos-v0.3.1.img.xz.partNN` 和 `merge-image.py`，运行
-   `python3 merge-image.py` 合并并核对 SHA-256。不要把源码 ZIP 当成可启动镜像。
+   下载 5 个 `rdk-x5-fnos-v0.3.1.img.xz.partNN` 和 `merge-image.py`，运行
+   `python3 merge-image.py` 合并并核对 SHA-256（加速包分卷 `fnos-x5-accel-0.3.5-runtime.fpk.partNN` 同时合并）。不要把源码 ZIP 当成可启动镜像。
 2. **在电脑写系统 microSD。** 用读卡器把 microSD 接到电脑，解压 XZ，使用
    整盘镜像工具写入。按容量和 USB 拓扑核对目标盘；写入会覆盖系统卡旧内容。
    不需要在开发板上执行写卡命令。

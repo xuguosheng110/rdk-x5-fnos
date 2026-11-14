@@ -6,11 +6,11 @@ v0.3.1 是首个附带完整系统镜像和独立加速包的版本，基于 r27
 
 - 内核启用 `CONFIG_FHANDLE`，飞牛文件监控可以正常工作，新建的个人和团队文件夹会自动出现在 SMB 里。
 - 家庭存储权限库不再重复修改已符合策略的目录，修复团队文件夹权限保存失败。
-- 附带完整镜像 `rdk-x5-fnos-v0.3.1.img.xz`（GitHub 单文件上限 2 GB，分 3 卷发布）和加速包 `fnos-x5-accel-0.3.5-runtime.fpk`。
+- 附带完整镜像 `rdk-x5-fnos-v0.3.1.img.xz`（5 个分卷）和加速包 `fnos-x5-accel-0.3.5-runtime.fpk`（3 个分卷）。每卷 512 MiB，便于在慢速网络下上传和下载。
 
 ## 下载与合并
 
-下载 `merge-image.py` 和 3 个 `rdk-x5-fnos-v0.3.1.img.xz.partNN` 到同一目录，运行 `python3 merge-image.py`。脚本会逐卷核对 SHA-256，再合并成 `rdk-x5-fnos-v0.3.1.img.xz` 并核对整体 SHA-256。加 `--download` 参数可以自动下载分卷。合并后解压 XZ，再把 `.img` 写入 microSD。
+把 `merge-image.py` 和全部 `.partNN` 分卷下载到同一目录，运行 `python3 merge-image.py`。脚本会逐卷核对 SHA-256，再合并出 `rdk-x5-fnos-v0.3.1.img.xz` 和 `fnos-x5-accel-0.3.5-runtime.fpk`，并核对整体 SHA-256。加 `--download` 参数可以自动下载分卷。合并后解压 XZ，再把 `.img` 写入 microSD。
 
 | 文件 | 字节 | SHA-256 |
 | --- | --- | --- |

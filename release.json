@@ -3,8 +3,8 @@
   "status": "r27_board_validated_full_release",
   "release_date": "2026-11-14",
   "distribution": {
-    "system_image_release": "published (GitHub Release, 3 split parts + merge-image.py)",
-    "bundled_acceleration_fpk_release": "published",
+    "system_image_release": "published (GitHub Release, 5 x 512 MiB parts + merge-image.py)",
+    "bundled_acceleration_fpk_release": "published (3 x 512 MiB parts, merged by merge-image.py)",
     "redistribution": "authorized by D-Robotics and fnOS (confirmed by maintainer 2026-11-14)"
   },
   "image": {
