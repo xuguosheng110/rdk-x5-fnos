@@ -1,3 +1,33 @@
+# v0.3.1 RDK X5 fnOS 完整镜像
+
+v0.3.1 是首个附带完整系统镜像和独立加速包的版本，基于 r27 构建（fnOS ARM 1.2.0701，Linux 6.18.0），在 RDK X5 真板上完成验收。地瓜机器人与飞牛已确认再分发授权。
+
+## 相比 v0.3.0
+
+- 内核启用 `CONFIG_FHANDLE`，飞牛文件监控可以正常工作，新建的个人和团队文件夹会自动出现在 SMB 里。
+- 家庭存储权限库不再重复修改已符合策略的目录，修复团队文件夹权限保存失败。
+- 附带完整镜像 `rdk-x5-fnos-v0.3.1.img.xz`（GitHub 单文件上限 2 GB，分 3 卷发布）和加速包 `fnos-x5-accel-0.3.5-runtime.fpk`。
+
+## 下载与合并
+
+下载 `merge-image.py` 和 3 个 `rdk-x5-fnos-v0.3.1.img.xz.partNN` 到同一目录，运行 `python3 merge-image.py`。脚本会逐卷核对 SHA-256，再合并成 `rdk-x5-fnos-v0.3.1.img.xz` 并核对整体 SHA-256。加 `--download` 参数可以自动下载分卷。合并后解压 XZ，再把 `.img` 写入 microSD。
+
+| 文件 | 字节 | SHA-256 |
+| --- | --- | --- |
+| rdk-x5-fnos-v0.3.1.img.xz | 2,612,850,028 | `59e6a7f8af809d2d8a2e692b384335843aa5227e0925b3ef3857adb853c15791` |
+| 解压后 .img | 13,157,531,648 | `2387a3a5c14d0908346fd41db9527bd56fd3f75a392d135d13dbfdec42847efe` |
+| fnos-x5-accel-0.3.5-runtime.fpk | 1,301,594,067 | `da8fc1a064fcdea991d976fca4693bd48badd62ba9f6215845b1ab5a4b3bb2b3` |
+| rdk-x5-linux-6.18-r26-source.tar.gz | 269,834,983 | `8eafd1d48d55b3cdcba7df643db099091d872b9aa9d152557c99bfe34a37a72c` |
+
+分卷校验值见 `parts.json` 和 `SHA256SUMS`。
+
+## r27 真板验收
+
+通过：原生首次设置、导入两块已有外置卷、新建个人与团队文件夹自动 SMB 共享（SMB 3.1.1 读写、改名、删除）、匿名与未知用户隔离、Wi-Fi 网页配置、相册与影视一键安装、0.3.5 加速包应用中心安装、影视 H.264/HEVC VPU 转码、热重启后应用、数据卷、共享、无线和原图哈希保持。
+
+待复验：新上传照片的 BPU 人脸自动索引。上传成功，但验收窗口内定时人脸任务未完成（r26 起已列为待复验）。已有照片的 BPU 人脸任务在 r25/r26 上验证通过。
+
+
 # v0.3.0 RDK X5 fnOS 适配源码
 
 基于 fnOS ARM 1.2.0701 和 Linux 6.18.0。r25 通过 50 项镜像检查及 X5 真板回归。独立加速模块 0.3.5 已在 r25 经应用中心全新安装并重启复测。系统镜像与加速包的字节数和校验值见 [release.json](release.json)。

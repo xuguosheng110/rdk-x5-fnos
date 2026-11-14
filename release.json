@@ -1,15 +1,22 @@
 {
-  "version": "v0.3.0",
-  "status": "r25_validated_source_release",
+  "version": "v0.3.1",
+  "status": "r27_board_validated_full_release",
   "release_date": "2026-11-14",
-  "base_fnos": "1.2.0701",
-  "kernel": {
-    "release": "6.18.0",
-    "config_sha256": "bee5f9981b13f72ea85374630a5545c0da58c776b51e57308bad36baac5ebf20",
-    "config_matches_v0_2_0": true,
-    "image_sha256": "1429ef8ffa19d3136d2c848c0ea1639b743ad31783b7bea722b840072cfd2cbb",
-    "source_archive_sha256": "be478464d0ad66150bd8325858ef9f53b9f92528b88b5091ffe422f5c4d9dea3",
-    "source_archive_comparison": "archive hash, embedded build identity and config verified against the reused kernel"
+  "distribution": {
+    "system_image_release": "published (GitHub Release, 3 split parts + merge-image.py)",
+    "bundled_acceleration_fpk_release": "published",
+    "redistribution": "authorized by D-Robotics and fnOS (confirmed by maintainer 2026-11-14)"
+  },
+  "image": {
+    "filename": "rdk-x5-fnos-v0.3.1.img.xz",
+    "bytes": 2612850028,
+    "sha256": "59e6a7f8af809d2d8a2e692b384335843aa5227e0925b3ef3857adb853c15791",
+    "uncompressed_bytes": 13157531648,
+    "uncompressed_sha256": "2387a3a5c14d0908346fd41db9527bd56fd3f75a392d135d13dbfdec42847efe",
+    "build_revision": "r27",
+    "root_uuid": "66f82b51-8ff2-4148-912f-c1e599f80b03",
+    "offline_checks_passed": 50,
+    "parts": "parts.json"
   },
   "module": {
     "appname": "fnos-x5-accel",
@@ -25,84 +32,76 @@
       "post_upgrade_reboot": "passed; installed FPK, active timer and runtime_ready"
     },
     "targeted_regression_passed": 61,
-    "r25_new_board_install": "passed via native app center; runtime_ready and timer active before and after reboot"
+    "r25_new_board_install": "passed via native app center; runtime_ready and timer active before and after reboot",
+    "release": "v0.3.1 asset"
   },
-  "source": {
-    "public_base_commit": "2c22437",
-    "snapshot": "r25 adaptation source release",
-    "source_pin": "SOURCE-PIN.json",
-    "excluded": "experimental semantic diagnostics, acceptance receipts, AppleDouble metadata, private credentials/logs"
+  "kernel_source": {
+    "name": "rdk-x5-linux-6.18-r26-source.tar.gz",
+    "size": 269834983,
+    "sha256": "8eafd1d48d55b3cdcba7df643db099091d872b9aa9d152557c99bfe34a37a72c"
   },
-  "distribution": {
-    "system_image_release": "authorization_pending",
-    "bundled_acceleration_fpk_release": "authorization_pending",
-    "source_scope": "adaptation source and documentation",
-    "image_xz": "private_candidate_hash_verified",
-    "source_zip": "local_checksum_verified",
-    "source_release": "v0.3.0; adaptation source and corresponding Linux source"
+  "kernel_change_since_v0_3_0": "CONFIG_FHANDLE=y (native file monitor needs open_by_handle_at)",
+  "acceptance_r27": {
+    "first_setup": "pass",
+    "import_two_volumes": "pass",
+    "smb_personal_auto_export": "pass",
+    "smb_team_auto_export": "pass",
+    "smb_auth_boundary": "pass",
+    "wifi_web": "pass",
+    "native_photos_media_install": "pass",
+    "fpk_0_3_5_install": "pass",
+    "media_h264_hevc_vpu": "pass",
+    "warm_reboot_apps_volumes_smb_originals": "pass",
+    "photos_new_upload_bpu_face_index": "open; carried over from r26"
   },
   "remaining": [
-    "establish distribution scope for the modified image and bundled FPK",
+    "re-verify BPU face indexing of newly uploaded photos on r27",
     "native removal of a mounted USB volume held by fnOS file monitor",
     "native cross-version Photos and Media upgrade once compatible newer versions are available",
     "broader USB hardware"
   ],
-  "candidate_image": {
-    "filename": "fnos-x5-product-candidate-v030-r25.img",
-    "bytes": 13157531648,
-    "sha256": "0926654f6a575db104d74bac97e6e2c138df08ad9099770ab10f4d6123d3112d",
-    "offline_checks": 50,
-    "accel_rows": 3690,
-    "model_config_rows": 6,
-    "native_app_rows": 40,
-    "separately_tracked_license_files": 5,
-    "archive": {
-      "filename": "rdk-x5-fnos-v0.3.0.img.xz",
-      "bytes": 2632607980,
-      "sha256": "76d7bdb76f8b1454257fe890e8521799a5e3bde2a14047d22584dca7f5a330a7"
+  "previous": {
+    "v0.3.0": {
+      "status": "r25_validated_source_release",
+      "kernel": {
+        "release": "6.18.0",
+        "config_sha256": "bee5f9981b13f72ea85374630a5545c0da58c776b51e57308bad36baac5ebf20",
+        "config_matches_v0_2_0": true,
+        "image_sha256": "1429ef8ffa19d3136d2c848c0ea1639b743ad31783b7bea722b840072cfd2cbb",
+        "source_archive_sha256": "be478464d0ad66150bd8325858ef9f53b9f92528b88b5091ffe422f5c4d9dea3",
+        "source_archive_comparison": "archive hash, embedded build identity and config verified against the reused kernel"
+      },
+      "candidate_image": {
+        "filename": "fnos-x5-product-candidate-v030-r25.img",
+        "bytes": 13157531648,
+        "sha256": "0926654f6a575db104d74bac97e6e2c138df08ad9099770ab10f4d6123d3112d",
+        "offline_checks": 50,
+        "accel_rows": 3690,
+        "model_config_rows": 6,
+        "native_app_rows": 40,
+        "separately_tracked_license_files": 5,
+        "archive": {
+          "filename": "rdk-x5-fnos-v0.3.0.img.xz",
+          "bytes": 2632607980,
+          "sha256": "76d7bdb76f8b1454257fe890e8521799a5e3bde2a14047d22584dca7f5a330a7"
+        }
+      },
+      "acceptance_r25": {
+        "image_offline_checks_passed": 50,
+        "source_linux_passed": 206,
+        "source_linux_skipped": 7,
+        "deployment": "full source stream and durable microSD write; post-write physical readback skipped",
+        "native_first_setup": "all four fields empty, independent setup complete",
+        "root": "expanded from 12 GiB to 29.5 GiB; retained after reboot",
+        "storage": "both ext4 and Btrfs volumes imported natively and mounted read/write after warm reboot",
+        "usb_create": "native Basic/Btrfs creation and remount validated on r24; r25 retests import, read/write and remount",
+        "original_media": "608 photos and 10 test videos preserved, file hashes match",
+        "wlan_and_smb": "independent clients verified before and after reboot",
+        "native_photos": "BPU face detection and FaceID128 confirmed by device descriptors and job rows",
+        "native_media": "H.264 and HEVC web transcode; hardware encode and decode both observed; post-reboot short HEVC tail quality switch passed",
+        "standalone_fpk": "0.3.5 clean Web installation and warm reboot follow-up passed",
+        "installation_layout": "native Photos and Media programs and internal database remain on system partition; linked app metadata, AI models, original user media and standalone FPK app data use selected external volume"
+      }
     }
-  },
-  "acceptance_r24": {
-    "scope": "r24 clean X5 first boot and native software acceptance",
-    "usb_create_reboot_read_write": "passed",
-    "independent_wlan_web_after_final_reboot": "passed",
-    "original_photo_volume_smb_read": "passed",
-    "photos_bpu_and_video_vpu": "observed native workloads",
-    "hevc_short_tail_rendition": "three pre-upgrade and one post-upgrade-reboot passes",
-    "source_linux": "205 pass, 7 skips",
-    "native_photos_reinstall": "0.9.14 reinstalled with data retained; people view recovered",
-    "native_media_reinstall": "0.9.8-1 reinstalled with library retained; restored the original folder grant via System Settings before playback",
-    "reinstall_media_integrity": "608 photos and 10 test videos match before and after",
-    "reinstall_transcode": "H.264 and HEVC VPU encode and decode; short HEVC quality switch passed",
-    "native_app_catalog": "on this X5, Photos 0.9.14 and Media 0.9.8-1 match the installed versions"
-  },
-  "acceptance_r25": {
-    "image_offline_checks_passed": 50,
-    "source_linux_passed": 206,
-    "source_linux_skipped": 7,
-    "deployment": "full source stream and durable microSD write; post-write physical readback skipped",
-    "native_first_setup": "all four fields empty, independent setup complete",
-    "root": "expanded from 12 GiB to 29.5 GiB; retained after reboot",
-    "storage": "both ext4 and Btrfs volumes imported natively and mounted read/write after warm reboot",
-    "usb_create": "native Basic/Btrfs creation and remount validated on r24; r25 retests import, read/write and remount",
-    "original_media": "608 photos and 10 test videos preserved, file hashes match",
-    "wlan_and_smb": "independent clients verified before and after reboot",
-    "native_photos": "BPU face detection and FaceID128 confirmed by device descriptors and job rows",
-    "native_media": "H.264 and HEVC web transcode; hardware encode and decode both observed; post-reboot short HEVC tail quality switch passed",
-    "standalone_fpk": "0.3.5 clean Web installation and warm reboot follow-up passed",
-    "installation_layout": "native Photos and Media programs and internal database remain on system partition; linked app metadata, AI models, original user media and standalone FPK app data use selected external volume"
-  },
-  "r26_candidate": {
-    "status": "image_and_source_archive_verified_board_pending",
-    "kernel_config_change": "FHANDLE n -> y",
-    "kernel_image_sha256": "044539fbf2d6760b389661b221ab1fe918e70860de0671d3dedb9309a2d0d741",
-    "kernel_config_sha256": "04bde2575e6a878ab34ec44aab6719e087622ef2a99808eadc0fbbbad87c013d",
-    "kernel_source_archive": {
-      "name": "rdk-x5-linux-6.18-r26-source.tar.gz",
-      "size": 269834983,
-      "sha256": "8eafd1d48d55b3cdcba7df643db099091d872b9aa9d152557c99bfe34a37a72c"
-    },
-    "image_offline_checks_passed": 50,
-    "native_smb_auto_export": "board_verification_pending"
   }
 }

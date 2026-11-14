@@ -8,13 +8,13 @@
 </p>
 
 <p align="center">
-  <img alt="版本 v0.3.0 候选" src="https://img.shields.io/badge/release-v0.3.0%20candidate-0891b2?style=flat-square">
+  <img alt="版本 v0.3.1" src="https://img.shields.io/badge/release-v0.3.1-0891b2?style=flat-square">
   <img alt="平台 RDK X5 ARM64" src="https://img.shields.io/badge/platform-RDK%20X5%20ARM64-263554?style=flat-square">
   <img alt="Linux 6.18.0" src="https://img.shields.io/badge/Linux-6.18.0-6d4aff?style=flat-square">
 </p>
 
 > [!IMPORTANT]
-> **v0.3.0 适配源码版。** r25 已在 RDK X5 验证首次设置、自动扩容、外置卷、Wi-Fi、SMB、相册 BPU、影视 VPU 和独立加速包 0.3.5。可下载适配源码和匹配的 Linux 6.18 源码。完整系统镜像和含第三方载荷的 FPK 待确认再分发授权，校验信息见 [release.json](release.json)。
+> **v0.3.1 完整镜像已发布。** r27 在 RDK X5 真板通过首次设置、外置卷导入、个人/团队文件夹 SMB 自动共享、Wi-Fi、影视 VPU 和独立加速包 0.3.5 验收。 [下载 v0.3.1](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.3.1)：3 个镜像分卷 + `merge-image.py`、加速包 FPK、内核源码和 `SHA256SUMS`。新上传照片的 BPU 人脸自动索引待复验，见 [RELEASE_NOTES.md](RELEASE_NOTES.md)。
 
 ## 快速开始
 
@@ -22,9 +22,9 @@
 USB 数据盘**。系统卡安装系统及飞牛原生应用。照片、视频、相册模型和原生应用元数据使用外置卷。使用
 符合 RDK 官方要求的电源。
 
-1. **取得获准分发的系统镜像。** 取得授权渠道提供的
-   `rdk-x5-fnos-v0.3.0.img.xz` 和 `SHA256SUMS`，先核对 SHA-256。不要把
-   源码 ZIP 当成可启动镜像。
+1. **下载并合并系统镜像。** 从 [v0.3.1 Release](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.3.1)
+   下载 3 个 `rdk-x5-fnos-v0.3.1.img.xz.partNN` 和 `merge-image.py`，运行
+   `python3 merge-image.py` 合并并核对 SHA-256。不要把源码 ZIP 当成可启动镜像。
 2. **在电脑写系统 microSD。** 用读卡器把 microSD 接到电脑，解压 XZ，使用
    整盘镜像工具写入。按容量和 USB 拓扑核对目标盘；写入会覆盖系统卡旧内容。
    不需要在开发板上执行写卡命令。
@@ -134,7 +134,8 @@ r24 和 r25 均实测 117 GB USB 盘在原生网页新建 Basic/Btrfs，热重�
 
 ## TODO
 
-- [ ] 在集成权限补丁的新镜像上复验团队共享原生创建与 SMB 自动导出。
+- [x] 在集成权限补丁的新镜像（r27）上复验团队共享原生创建与 SMB 自动导出。
+- [ ] 在 r27 上复验新上传照片的 BPU 人脸自动索引。
 - [ ] 排查原生删除旧卷时文件监控占用问题。
 - [ ] 补充更多 USB 控制器的长期读写测试。
 - [ ] 等应用中心提供新的兼容版本后，复测原生相册和影视跨版本升级。
