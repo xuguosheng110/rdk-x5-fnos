@@ -1,11 +1,12 @@
 {
   "version": "v0.3.1",
-  "status": "r27_board_validated_full_release",
-  "release_date": "2026-11-14",
+  "status": "stable",
+  "release_date": "2026-11-23",
   "distribution": {
     "system_image_release": "published (GitHub Release, 5 x 512 MiB parts + merge-image.py)",
     "bundled_acceleration_fpk_release": "published (3 x 512 MiB parts, merged by merge-image.py)",
-    "redistribution": "authorized by D-Robotics and fnOS (confirmed by maintainer 2026-11-14)"
+    "redistribution": "authorized by D-Robotics and fnOS (confirmed by maintainer 2026-11-14)",
+    "baidu_folder": "/开源与分享/飞牛OS/v0.3.1"
   },
   "image": {
     "filename": "rdk-x5-fnos-v0.3.1.img.xz",
@@ -52,13 +53,14 @@
     "fpk_0_3_5_install": "pass",
     "media_h264_hevc_vpu": "pass",
     "warm_reboot_apps_volumes_smb_originals": "pass",
-    "photos_new_upload_bpu_face_index": "open; carried over from r26"
+    "photos_new_upload_bpu_face_index": "pass; native web uploads, default settings on a fresh account, hardware detection and FaceID128 observed on 2026-11-23"
   },
   "remaining": [
-    "re-verify BPU face indexing of newly uploaded photos on r27",
     "native removal of a mounted USB volume held by fnOS file monitor",
     "native cross-version Photos and Media upgrade once compatible newer versions are available",
-    "broader USB hardware"
+    "broader USB hardware",
+    "Extended cold-boot and mixed-storage qualification",
+    "Qualify preview features and the newer LTS kernel separately"
   ],
   "previous": {
     "v0.3.0": {
@@ -103,5 +105,6 @@
         "installation_layout": "native Photos and Media programs and internal database remain on system partition; linked app metadata, AI models, original user media and standalone FPK app data use selected external volume"
       }
     }
-  }
+  },
+  "release_channel": "stable"
 }
