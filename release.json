@@ -1,40 +1,113 @@
 {
-  "version": "v0.3.2",
+  "version": "v0.3.3",
+  "status": "candidate_built_board_acceptance_pending_not_published",
+  "candidate": "PR4 RC1",
   "base_version": "v0.3.1",
-  "status": "local_build",
+  "source_commit": "2789cbd073ab1d801d02efd84fbc3eca7613633e",
+  "assembly_source_commit": "cc158ad48d695e2e8ca832b8a600550891ad4cf6",
   "image": {
-    "filename": "rdk-x5-fnos-v0.3.2.img",
+    "filename": "fnos-x5-v0.3.3-pr4-rc1.img",
     "bytes": 13157531648,
-    "sha256": "24fa2c7b6b949b2b11a481ec3915754d5a688a7d2f80690e2f3d0f708dde4372",
+    "sha256": "eeac138a0c3a3456ed796ed51cedc355033a449288646e30d63b82f594e82983",
     "format": "raw",
-    "root_partition_limit_gib": 16
+    "root_partition_limit_gib": 16,
+    "compressed_artifact": "pending"
   },
   "linux": "6.18.0",
   "fnos_arm": "1.2.0701",
   "type_c_ipv4": "192.168.128.10/24",
-  "quark_launcher_version": "1.1.20",
+  "type_c_host_support": "Windows RNDIS; this candidate Windows client validation pending",
   "wifi_driver_hotfix": {
     "module": "aic8800_fdrv.ko",
-    "kernel_image_sha256": "608dbb9fe29e49ac1f10ca009f9004ff069c2c28260695806a2a1fc67a3312f0",
-    "original_module_sha256": "52a3d2eb9d2dec4663b40da3d8e10aa3b3eb4ff5c906959126f4a1b5bda41fd4",
-    "module_sha256": "83e88d11da3b0c0d38d3a4bb53623c928ab660e86d908dcb0a4bc5de19c03bfe",
-    "srcversion": "280A0A6A427556960B5AC02"
+    "kernel_image_sha256": "044539fbf2d6760b389661b221ab1fe918e70860de0671d3dedb9309a2d0d741",
+    "original_module_sha256": "ff44feae2a1a9f5ac08116a3c239687be05b7c137a62a81ad58b09b9c47eaea6",
+    "module_sha256": "fa3f468ff4b211fb8c2e819c06a50f4f1568b16ef3f0fe56b37f4c536b99578a",
+    "srcversion": "93D1FE3C2006DE2A96E884B",
+    "runtime_test": "hotload, ps_on=N, saved-profile reconnect, Web and SMB passed; new image reboot pending"
   },
   "in_place_update": {
-    "from": "v0.3.2",
+    "from": [
+      "v0.3.2",
+      "v0.3.3"
+    ],
     "to": "v0.3.3",
-    "filename": "rdk-x5-fnos-v0.3.2-to-v0.3.3-performance.pyz",
-    "bytes": 210822,
-    "sha256": "a984501ef1325c8aada6a73df9de5acd5d76f89c83c4323024205629c0f773c5"
+    "filename": "fnos-x5-update-v0.3.3-current-kernel.pyz",
+    "bytes": 210108,
+    "sha256": "e9d89de276466ce0b15bf7af8bc5677e9f59e6f5356ec76d468cbae369626716",
+    "scope": "The original PR v0.3.2 build has a different kernel digest and requires its own matched package. r27 without the version marker is not an in-place target.",
+    "board_validation": "pending",
+    "requires_exact_kernel_sha256": "044539fbf2d6760b389661b221ab1fe918e70860de0671d3dedb9309a2d0d741"
+  },
+  "validation": {
+    "related_software_passed": 47,
+    "linux_regression_total": 226,
+    "linux_regression_passed": 219,
+    "linux_regression_skipped": 7,
+    "final_image_critical_checks_passed": 53,
+    "final_image_checks_scope": "raw image file; not a physical card or boot result",
+    "factory_wifi_cpu_and_rollback_baselines": "verified",
+    "new_candidate_board": "not_started"
+  },
+  "module": {
+    "appname": "fnos-x5-accel",
+    "build_version": "0.3.5",
+    "public_version": "0.3.0",
+    "filename": "fnos-x5-accel-0.3.5-runtime.fpk",
+    "sha256": "da8fc1a064fcdea991d976fca4693bd48badd62ba9f6215845b1ab5a4b3bb2b3",
+    "bytes": 1301594067,
+    "native_upgrade": "0.3.4 to 0.3.5 passed on r24 via native app center",
+    "prior_r24_coverage": {
+      "new_board_install": "passed on flashed r24",
+      "native_uninstall": "passed; original native player SHA verified",
+      "post_upgrade_reboot": "passed; installed FPK, active timer and runtime_ready"
+    },
+    "targeted_regression_passed": 61,
+    "r25_new_board_install": "passed via native app center; runtime_ready and timer active before and after reboot",
+    "release": "verified private package; remote publication pending"
+  },
+  "upstream_pr_build": {
+    "image": {
+      "filename": "rdk-x5-fnos-v0.3.2.img",
+      "bytes": 13157531648,
+      "sha256": "24fa2c7b6b949b2b11a481ec3915754d5a688a7d2f80690e2f3d0f708dde4372",
+      "format": "raw",
+      "root_partition_limit_gib": 16
+    },
+    "wifi_driver_hotfix": {
+      "module": "aic8800_fdrv.ko",
+      "kernel_image_sha256": "608dbb9fe29e49ac1f10ca009f9004ff069c2c28260695806a2a1fc67a3312f0",
+      "original_module_sha256": "52a3d2eb9d2dec4663b40da3d8e10aa3b3eb4ff5c906959126f4a1b5bda41fd4",
+      "module_sha256": "83e88d11da3b0c0d38d3a4bb53623c928ab660e86d908dcb0a4bc5de19c03bfe",
+      "srcversion": "280A0A6A427556960B5AC02"
+    },
+    "in_place_update": {
+      "from": "v0.3.2",
+      "to": "v0.3.3",
+      "filename": "rdk-x5-fnos-v0.3.2-to-v0.3.3-performance.pyz",
+      "bytes": 210822,
+      "sha256": "a984501ef1325c8aada6a73df9de5acd5d76f89c83c4323024205629c0f773c5"
+    },
+    "scope": "Contributor build record only; do not mix these digests with the current candidate"
   },
   "previous": {
     "version": "v0.3.1",
-    "status": "r27_board_validated_full_release",
+    "status": "r27_board_validated_publication_observed_separately",
     "release_date": "2026-11-14",
     "distribution": {
-      "system_image_release": "published (GitHub Release, 5 x 512 MiB parts + merge-image.py)",
-      "bundled_acceleration_fpk_release": "published (3 x 512 MiB parts, merged by merge-image.py)",
-      "redistribution": "authorized by D-Robotics and fnOS (confirmed by maintainer 2026-11-14)"
+      "remote_observed_at": "2026-11-23",
+      "github_is_draft": true,
+      "github_asset_names": [
+        "merge-image.py",
+        "parts.json",
+        "rdk-x5-fnos-v0.3.1-source.zip",
+        "README.md",
+        "release.json",
+        "RELEASE_NOTES.md",
+        "SHA256SUMS",
+        "TESTED.md"
+      ],
+      "full_image_fpk_kernel_remote_verified": false,
+      "redistribution": "authorized by D-Robotics and fnOS as confirmed by maintainer"
     },
     "image": {
       "filename": "rdk-x5-fnos-v0.3.1.img.xz",
@@ -81,10 +154,9 @@
       "fpk_0_3_5_install": "pass",
       "media_h264_hevc_vpu": "pass",
       "warm_reboot_apps_volumes_smb_originals": "pass",
-      "photos_new_upload_bpu_face_index": "open; carried over from r26"
+      "photos_new_upload_bpu_face_index": "passed on 2026-11-23: fresh native UI uploads, app restart and new regular account; native debounce approximately 120 seconds"
     },
     "remaining": [
-      "re-verify BPU face indexing of newly uploaded photos on r27",
       "native removal of a mounted USB volume held by fnOS file monitor",
       "native cross-version Photos and Media upgrade once compatible newer versions are available",
       "broader USB hardware"
@@ -134,5 +206,5 @@
       }
     }
   },
-  "qbittorrent_launcher_version": "5.1.4"
+  "base_build_revision": "r27"
 }

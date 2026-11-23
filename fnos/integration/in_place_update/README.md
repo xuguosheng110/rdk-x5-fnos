@@ -1,20 +1,21 @@
 # RDK X5 v0.3.2 → v0.3.3 原地更新
 
-支持本项目真板验证的 v0.3.2 镜像（fnOS ARM 1.2.0701、Linux 6.18.0）。更新包包含 AIC8800 Wi-Fi 模块、应用兼容脚本、Wi-Fi 与 CPU 性能配置，以及版本标记。系统分区中的 `/var/lib/fnos-x5/update-v0.3.3/` 保存原模块和脚本，用于回滚。同一更新包可重复执行。升级或回滚过程中中断后，使用同一个包重试 `apply` 或执行 `rollback`。
+仅支持与更新包内精确内核/模块摘要匹配的构建（fnOS ARM 1.2.0701、Linux 6.18.0）。当前 PR4 RC1 完整镜像已内置配置，无需再次安装更新包；新候选的真板更新与回滚尚待验收。原始社区 PR 的 v0.3.2 内核与本候选不同，不能只凭版本号混用。r27/v0.3.1 缺少本事务基线，也不能直接使用该包升级。更新包包含 AIC8800 Wi-Fi 模块、应用兼容脚本、Wi-Fi 与 CPU 性能配置，以及版本标记。系统分区中的 `/var/lib/fnos-x5/update-v0.3.3/` 保存原模块和脚本，用于回滚。同一更新包可重复执行。升级或回滚过程中中断后，使用同一个包重试 `apply` 或执行 `rollback`。
 
-按[内核说明](../../../KERNEL.md#v033-aic8800-sdio-wi-fi-修复)构建匹配的 AIC8800 模块，然后在源码根目录用 Python 3 构建更新包。
+当前候选更新包名为 `fnos-x5-update-v0.3.3-current-kernel.pyz`。下载后先核对 [release.json](../../../release.json) 的 `in_place_update` 与 `wifi_driver_hotfix`，只有内核与基线均匹配才运行。以下构建命令需要同一轮审核后的模块和 `wifi-target.json`：
 
 ```sh
-python3 -m fnos.integration.in_place_update.build rdk-x5-fnos-v0.3.2-to-v0.3.3-performance.pyz --wifi-module aic8800_fdrv.ko
-sha256sum rdk-x5-fnos-v0.3.2-to-v0.3.3-performance.pyz
+python3 -m fnos.integration.in_place_update.build fnos-x5-update-v0.3.3-current-kernel.pyz \
+  --wifi-module aic8800_fdrv.ko --wifi-target wifi-target.json
+sha256sum fnos-x5-update-v0.3.3-current-kernel.pyz
 ```
 
-将包传到 X5，和 [release.json](../../../release.json) 中的 `in_place_update.sha256` 核对。把包放在系统分区，方便应用更新后再次使用。
+维护精确匹配的系统时，将包传到 X5，和 [release.json](../../../release.json) 中的 `in_place_update.sha256` 核对。把包放在系统分区，方便应用更新后再次使用。
 
 ```sh
-sudo install -o root -g root -m 0600 rdk-x5-fnos-v0.3.2-to-v0.3.3-performance.pyz /var/lib/fnos-x5/
-sudo python3 /var/lib/fnos-x5/rdk-x5-fnos-v0.3.2-to-v0.3.3-performance.pyz status
-sudo python3 /var/lib/fnos-x5/rdk-x5-fnos-v0.3.2-to-v0.3.3-performance.pyz apply
+sudo install -o root -g root -m 0600 fnos-x5-update-v0.3.3-current-kernel.pyz /var/lib/fnos-x5/
+sudo python3 /var/lib/fnos-x5/fnos-x5-update-v0.3.3-current-kernel.pyz status
+sudo python3 /var/lib/fnos-x5/fnos-x5-update-v0.3.3-current-kernel.pyz apply
 sudo reboot
 ```
 
@@ -29,7 +30,7 @@ cat /sys/devices/system/cpu/cpufreq/policy*/scaling_governor
 已经装过早期 v0.3.3 包的设备可继续执行 `apply` 补齐性能配置。包会拒绝覆盖相同路径下内容不同的本地配置。回滚移除包管理的性能配置和 CPU 服务启用链接，命令输出 `v0.3.2`。重启加载原模块并恢复系统默认的频率策略。原模块可能复现已知的 Wi-Fi 启动异常。
 
 ```sh
-sudo python3 /var/lib/fnos-x5/rdk-x5-fnos-v0.3.2-to-v0.3.3-performance.pyz rollback
+sudo python3 /var/lib/fnos-x5/fnos-x5-update-v0.3.3-current-kernel.pyz rollback
 sudo reboot
 ```
 
