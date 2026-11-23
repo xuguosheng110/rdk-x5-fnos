@@ -109,6 +109,7 @@ def atomic_write(path, contents, mode):
     fd, temporary = tempfile.mkstemp(dir=path.parent)
     try:
         with os.fdopen(fd, 'wb') as output:
+            os.fchown(output.fileno(), 0, 0)
             os.fchmod(output.fileno(), mode)
             output.write(contents)
             output.flush()
@@ -150,6 +151,7 @@ class Installation:
         fd = os.open(self.state / 'lock', os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
         try:
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            os.fchown(fd, 0, 0)
             yield
         finally:
             os.close(fd)
@@ -243,6 +245,7 @@ class Installation:
         if not enabled:
             link = self.root / CPU_ENABLE
             link.symlink_to(CPU_UNIT_TARGET)
+            os.lchown(link, 0, 0)
             sync_dir(link.parent)
         if version != TARGET:
             self.set_release(TARGET)

@@ -27,6 +27,10 @@ class UpdateTest(unittest.TestCase):
             return SimpleNamespace(st_uid=0, st_gid=0, st_mode=info.st_mode)
 
         ownership = patch.object(Path, 'lstat', root_owned)
+        for method in ('fchown', 'lchown'):
+            owner_call = patch.object(update.os, method)
+            owner_call.start()
+            self.addCleanup(owner_call.stop)
         ownership.start()
         self.addCleanup(ownership.stop)
         self.old_digest = hashlib.sha256(OLD).hexdigest()

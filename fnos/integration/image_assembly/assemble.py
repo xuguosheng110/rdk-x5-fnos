@@ -164,6 +164,7 @@ def stage_x5_release(root: Path, release='v0.3.3', *, wifi_module=None, wifi_tar
         link.parent.mkdir(parents=True, exist_ok=True)
         if not link.is_symlink() or os.readlink(link) != '../' + name:
             link.symlink_to('../' + name)
+            run(['chown', '-h', '0:0', str(link)])
     return report
 
 

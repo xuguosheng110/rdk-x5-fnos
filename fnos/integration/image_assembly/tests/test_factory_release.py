@@ -46,7 +46,9 @@ class FactoryReleaseTests(unittest.TestCase):
             return SimpleNamespace(st_uid=0, st_gid=0, st_mode=info.st_mode)
 
         for mock in (patch.object(Path, 'lstat', root_owned),
-                     patch.object(factory_release.os, 'chown'), patch.object(assemble, 'run')):
+                     patch.object(factory_release.os, 'chown'),
+                     patch.object(factory_release.os, 'fchown'),
+                     patch.object(factory_release.os, 'lchown'), patch.object(assemble, 'run')):
             mock.start()
             self.addCleanup(mock.stop)
 
