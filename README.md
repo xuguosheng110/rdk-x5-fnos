@@ -8,17 +8,29 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/xuguosheng110/rdk-x5-fnos/releases/latest"><img alt="稳定版 v0.3.1" src="https://img.shields.io/badge/stable-v0.3.1-147a63?style=flat-square"></a>
   <img alt="v0.3.3 整合预览" src="https://img.shields.io/badge/preview-v0.3.3-f59e0b?style=flat-square">
   <img alt="平台 RDK X5 ARM64" src="https://img.shields.io/badge/platform-RDK%20X5%20ARM64-263554?style=flat-square">
   <img alt="Linux 6.18.0" src="https://img.shields.io/badge/Linux-6.18.0-6d4aff?style=flat-square">
 </p>
 
 <p align="center">
-  <a href="#完整版安装">下载安装</a> ·
+  <a href="#稳定版安装">稳定版安装</a> ·
+  <a href="#完整版安装">预览版安装</a> ·
   <a href="#加速模块">相册与影视加速</a> ·
   <a href="#todo">进展与计划</a> ·
   <a href="https://github.com/xuguosheng110/rdk-x5-fnos/issues">问题反馈</a>
 </p>
+
+## 稳定版安装
+
+**家庭 NAS 推荐 v0.3.1（r27）**。准备一张至少 32 GB 的 microSD 和一个独立 USB 数据盘。该版在 RDK X5 上验证了网页首设、Wi-Fi、SMB、相册 BPU 人脸加速和影视 VPU 转码。[下载稳定版](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.3.1)
+
+1. 从百度网盘 `开源与分享/飞牛OS/v0.3.1` 下载完整的 `rdk-x5-fnos-v0.3.1.img.xz`。也可从 GitHub 下载 `merge-image.py`，在空目录运行 `python3 merge-image.py --download`，自动下载、校验并合并分卷。
+2. 解压镜像，选中目标 microSD 写卡。把系统卡装入 X5，接上网线并上电。在路由器找到板卡 IP，打开 `http://板卡IP:5666/` 创建管理员。
+3. 进入「存储空间管理」创建空盘存储空间或导入已有飞牛卷，再从欢迎页启用相册和影视。独立加速包 0.3.5 可通过「应用中心 → 手动安装」装到所选外置卷。[稳定版使用手册、测试范围和 TODO](https://github.com/xuguosheng110/rdk-x5-fnos/blob/v0.3.1/README.md)
+
+## 社区预览版
 
 > **v0.3.3 社区整合预览。** 纳入用户 PR 的 Type-C 闪连、TF 单卡存储、Wi-Fi 修复和可回滚更新。完整镜像已在 X5 验证空白首次设置、原生存储创建、相册 BPU、影视 VPU、升级回滚及受控断电恢复。下载以 [v0.3.3 Release](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.3.3) 实际公开文件为准；本版保留已说明的硬件与应用版本边界。
 
@@ -31,6 +43,8 @@
 完整镜像的 XZ 约 2.48 GB，独立加速 FPK 约 1.30 GB。GitHub 提供镜像分卷、`merge-image.py` 和 `parts.json`；FPK 为完整单文件。校验值见 [release.json](release.json) 和 Release 的 `SHA256SUMS`。本轮通过 47 项相关测试、Linux 回归 219 项（另 7 项跳过）和 53 项成品检查，真板范围见下方验收表。开发者维护方法见 [原地更新说明](fnos/integration/in_place_update/README.md)。
 
 ## 完整版安装
+
+以下步骤适用于 v0.3.3 社区预览。
 
 1. 下载对应版本的完整系统 `.img` 或 `.img.xz`，先核对 SHA-256；`.xz` 解压后按容量确认目标 TF 卡，再整盘写入。整盘烧录会重建系统卡分区，卡内已有存储空间和应用数据请先备份；外置数据盘不作为烧录目标。GitHub 分卷需先按该 Release 的说明合并；源码 ZIP 不能直接烧录。
 2. 将 TF 卡装入 X5 后上电。首次启动会将系统分区扩展到最多 16 GiB，剩余容量留给存储空间管理。已有较大系统分区不会被缩小。
