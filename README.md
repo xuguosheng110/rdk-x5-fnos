@@ -26,7 +26,7 @@
 
 **家庭 NAS 推荐 v0.3.1（r27）**。准备一张至少 32 GB 的 microSD 和一个独立 USB 数据盘。该版在 RDK X5 上验证了网页首设、Wi-Fi、SMB、相册 BPU 人脸加速和影视 VPU 转码。[下载稳定版](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.3.1)
 
-1. 从百度网盘 `开源与分享/飞牛OS/v0.3.1` 下载完整的 `rdk-x5-fnos-v0.3.1.img.xz`。也可从 GitHub 下载 `merge-image.py`，在空目录运行 `python3 merge-image.py --download`，自动下载、校验并合并分卷。
+1. 从[百度网盘稳定版目录](https://pan.baidu.com/s/19a2GZmZF53fxANQznGT59A?pwd=5pwq)下载完整的 `rdk-x5-fnos-v0.3.1.img.xz`。也可从 GitHub 下载 `merge-image.py`，在空目录运行 `python3 merge-image.py --download`，自动下载、校验并合并分卷。
 2. 解压镜像，选中目标 microSD 写卡。把系统卡装入 X5，接上网线并上电。在路由器找到板卡 IP，打开 `http://板卡IP:5666/` 创建管理员。
 3. 进入「存储空间管理」创建空盘存储空间或导入已有飞牛卷，再从欢迎页启用相册和影视。独立加速包 0.3.5 可通过「应用中心 → 手动安装」装到所选外置卷。[稳定版使用手册、测试范围和 TODO](https://github.com/xuguosheng110/rdk-x5-fnos/blob/v0.3.1/README.md)
 
