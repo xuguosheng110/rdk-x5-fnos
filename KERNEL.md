@@ -1,5 +1,19 @@
 # Linux 6.18 kernel builds for RDK X5 fnOS
 
+## v0.3.3 matching source bundle
+
+The [v0.3.3 Release](https://github.com/xuguosheng110/rdk-x5-fnos/releases/tag/v0.3.3)
+provides `rdk-x5-linux-6.18-pr4-source.zip` (270,076,035 bytes), SHA-256
+`17bc6cbd2760515c5a7fcf316e81e084990c6c7b06ef3361633c7a00003b06ae`.
+It contains the complete X5 kernel source archive, the two exact additional Wi-Fi
+patches, matching config, target manifest and build notes. Kernel Image remains
+`044539fb…d741`; config remains `04bde257…13d`. Original COPYING/LICENSES remain
+inside the kernel source archive.
+
+Reference baseline: [upstream Linux v6.18](https://github.com/torvalds/linux/tree/v6.18).
+The X5-specific source snapshot, configuration and appended patches are provided
+in the matching bundle above; adaptation Python source is in this repository.
+
 ## Published v0.3.0 source baseline
 
 | Item | Value |

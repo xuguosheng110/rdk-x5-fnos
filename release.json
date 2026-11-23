@@ -1,6 +1,6 @@
 {
   "version": "v0.3.3",
-  "status": "candidate_built_board_acceptance_pending_not_published",
+  "status": "board_validated_preview",
   "candidate": "PR4 RC1",
   "base_version": "v0.3.1",
   "source_commit": "2789cbd073ab1d801d02efd84fbc3eca7613633e",
@@ -22,14 +22,14 @@
   "linux": "6.18.0",
   "fnos_arm": "1.2.0701",
   "type_c_ipv4": "192.168.128.10/24",
-  "type_c_host_support": "Windows RNDIS; this candidate Windows client validation pending",
+  "type_c_host_support": "Windows RNDIS; contributor has Windows validation; this build enumerated on Mac, independent Windows client pending",
   "wifi_driver_hotfix": {
     "module": "aic8800_fdrv.ko",
     "kernel_image_sha256": "044539fbf2d6760b389661b221ab1fe918e70860de0671d3dedb9309a2d0d741",
     "original_module_sha256": "ff44feae2a1a9f5ac08116a3c239687be05b7c137a62a81ad58b09b9c47eaea6",
     "module_sha256": "fa3f468ff4b211fb8c2e819c06a50f4f1568b16ef3f0fe56b37f4c536b99578a",
     "srcversion": "93D1FE3C2006DE2A96E884B",
-    "runtime_test": "hotload, ps_on=N, saved-profile reconnect, Web and SMB passed; new image reboot pending"
+    "runtime_test": "fresh image boot, native Wi-Fi page configuration, rollback/reapply boot and controlled cold boot verified"
   },
   "in_place_update": {
     "from": [
@@ -41,7 +41,7 @@
     "bytes": 210108,
     "sha256": "e9d89de276466ce0b15bf7af8bc5677e9f59e6f5356ec76d468cbae369626716",
     "scope": "The original PR v0.3.2 build has a different kernel digest and requires its own matched package. r27 without the version marker is not an in-place target.",
-    "board_validation": "pending",
+    "board_validation": "rollback and reapply, two reboots, actual loaded module and policy, all three data-volume hashes passed",
     "requires_exact_kernel_sha256": "044539fbf2d6760b389661b221ab1fe918e70860de0671d3dedb9309a2d0d741"
   },
   "validation": {
@@ -69,7 +69,7 @@
     },
     "targeted_regression_passed": 61,
     "r25_new_board_install": "passed via native app center; runtime_ready and timer active before and after reboot",
-    "release": "verified private package; remote publication pending"
+    "release": "v0.3.3 complete FPK asset; byte-identical to previously tested 0.3.5"
   },
   "upstream_pr_build": {
     "image": {
@@ -218,5 +218,20 @@
     "sha256": "17bc6cbd2760515c5a7fcf316e81e084990c6c7b06ef3361633c7a00003b06ae",
     "filename": "rdk-x5-linux-6.18-pr4-source.zip",
     "contents": "Complete r26 kernel source archive, exact additional Wi-Fi patches, matching config, target manifest and build notes"
-  }
+  },
+  "verification_source_commit": "2789cbd073ab1d801d02efd84fbc3eca7613633e",
+  "acceptance_20261123": {
+    "generic_first_setup": "empty fields; no seeded normal users or SSH keys",
+    "system_root_limit_gib": 16,
+    "native_tf_pool": "Btrfs; approx 12.95 GB usable",
+    "protected_external_volumes": "ext4 and Btrfs UUIDs retained",
+    "smb_tf": "SMB3.1.1 CRUD hashes and post-cold-boot sentinel passed",
+    "photos_native_auto_bpu": "passed; no manual AI trigger",
+    "native_media_vpu": "H264 480p and HEVC 720p to near tail; vdec/venc observed",
+    "update_rollback_reapply": "disk and loaded module, policy and three volume sentinels verified",
+    "controlled_power_cycle": "kernel shutdown receipt then only s2 off 5s/on; recovery passed",
+    "wifi_native_web": "native scan and credentials form created connection; temporary lab profile removed; automatic reconnect and Web200 verified after reboot",
+    "fpk": "unchanged 0.3.5 package; prior native lifecycle coverage retained"
+  },
+  "publication_scope": "preview; actual public artifacts are authoritative at the v0.3.3 GitHub Release"
 }
