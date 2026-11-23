@@ -210,5 +210,11 @@
       }
     }
   },
-  "base_build_revision": "r27"
+  "base_build_revision": "r27",
+  "kernel_source": {
+    "bytes": 270076035,
+    "sha256": "17bc6cbd2760515c5a7fcf316e81e084990c6c7b06ef3361633c7a00003b06ae",
+    "filename": "rdk-x5-linux-6.18-pr4-source.zip",
+    "contents": "Complete r26 kernel source archive, exact additional Wi-Fi patches, matching config, target manifest and build notes"
+  }
 }
