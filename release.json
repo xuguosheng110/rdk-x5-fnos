@@ -1,6 +1,6 @@
 {
   "version": "v0.3.3",
-  "status": "board_validated_preview",
+  "status": "preview_with_confirmed_reboot_panic",
   "candidate": "PR4 RC1",
   "base_version": "v0.3.1",
   "source_commit": "2789cbd073ab1d801d02efd84fbc3eca7613633e",
@@ -29,7 +29,7 @@
     "original_module_sha256": "ff44feae2a1a9f5ac08116a3c239687be05b7c137a62a81ad58b09b9c47eaea6",
     "module_sha256": "fa3f468ff4b211fb8c2e819c06a50f4f1568b16ef3f0fe56b37f4c536b99578a",
     "srcversion": "93D1FE3C2006DE2A96E884B",
-    "runtime_test": "fresh image boot, native Wi-Fi page configuration, rollback/reapply boot and controlled cold boot verified"
+    "runtime_test": "Native Wi-Fi configured; recovery after automatic second boot. One kernel panic during the preceding attempt; cause unresolved."
   },
   "in_place_update": {
     "from": [
@@ -52,7 +52,7 @@
     "final_image_critical_checks_passed": 53,
     "final_image_checks_scope": "raw image file; not a physical card or boot result",
     "factory_wifi_cpu_and_rollback_baselines": "verified",
-    "new_candidate_board": "passed; fresh setup, native TF creation, Wi-Fi UI/reconnect, Photos BPU, Media VPU, SMB, rollback/reapply and controlled cold boot; see acceptance_20261123"
+    "new_candidate_board": "Feature results are detailed below. Normal reboot stability failed: kernel panic on first boot after Wi-Fi configuration; automatic second boot recovered."
   },
   "module": {
     "appname": "fnos-x5-accel",
@@ -230,8 +230,9 @@
     "native_media_vpu": "H264 480p and HEVC 720p to near tail; vdec/venc observed",
     "update_rollback_reapply": "disk and loaded module, policy and three volume sentinels verified",
     "controlled_power_cycle": "kernel shutdown receipt then only s2 off 5s/on; recovery passed",
-    "wifi_native_web": "native scan and credentials form created connection; temporary lab profile removed; automatic reconnect and Web200 verified after reboot",
-    "fpk": "unchanged 0.3.5 package; prior native lifecycle coverage retained"
+    "wifi_native_web": "Native form worked; following reboot panicked during first boot and recovered Wi-Fi/Web/SMB on automatic second boot.",
+    "fpk": "unchanged 0.3.5 package; prior native lifecycle coverage retained",
+    "normal_reboot_stability": "failed; see BOOT-ERRATA.md"
   },
   "publication_scope": "preview; actual public artifacts are authoritative at the v0.3.3 GitHub Release"
 }

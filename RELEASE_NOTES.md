@@ -2,6 +2,8 @@
 
 ## v0.3.3 社区整合预览
 
+**启动勘误** 普通重启曾在内核 cgroup 清理时发生 panic，自动二次启动后恢复。本版普通重启稳定性验收未通过。[启动勘误](https://github.com/xuguosheng110/rdk-x5-fnos/blob/main/BOOT-ERRATA.md)
+
 - 保留 maxma615 的 PR #2/#3 提交：Type-C RNDIS、TF 系统分区上限 16 GiB、应用日志兼容、AIC8800 队列/时钟修复、关闭 Wi-Fi 省电、CPU 性能策略和原地回滚。
 - 补齐完整镜像与更新包的同源事务、旧驱动/脚本备份、精确内核目标和安全文件权限；README 参考 PR #1 的导航方式，保留 X5 实物封面。
 - 本板验证空白首次设置、TF 原生 Btrfs 创建、外置卷保留、原生相册自动 BPU、H.264/HEVC VPU、回滚/复升及正常/受控断电恢复。完整边界见 [TESTED.md](TESTED.md)。
