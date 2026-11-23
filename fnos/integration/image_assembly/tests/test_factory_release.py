@@ -1,5 +1,6 @@
 """The full image must not claim the updater's target without its hotfix."""
 from pathlib import Path
+from contextlib import contextmanager
 import hashlib
 import os
 import tempfile
@@ -167,6 +168,75 @@ class FactoryReleaseTests(unittest.TestCase):
                                (update.RELEASE.parent, 0o755), (update.HELPER.parent, 0o755)):
             self.assertEqual((self.root / relative).stat().st_mode & 0o777, mode)
         factory_release.verify(self.root, 'v0.3.3', self.manifest)
+
+
+    def test_factory_normalizes_reviewed_kernel_artifact_modes_without_relaxing_updater(self):
+        driver = self.root / update.DRIVER
+        driver.chmod(0o664)
+        kernel = self.root / 'usr/lib/modules/6.18.0/kernel'
+        for parent in driver.parents:
+            if parent == kernel.parent:
+                break
+            parent.chmod(0o775)
+        unrelated = self.root / 'vol1/photos'
+        unrelated.chmod(0o777)
+        assemble.stage_x5_release(self.root, wifi_module=self.module, wifi_target=self.manifest)
+        self.assertEqual(driver.stat().st_mode & 0o777, 0o644)
+        for parent in driver.parents:
+            if parent == kernel.parent:
+                break
+            self.assertEqual(parent.stat().st_mode & 0o777, 0o755)
+        self.assertEqual(unrelated.stat().st_mode & 0o777, 0o777)
+        factory_release.verify(self.root, 'v0.3.3', self.manifest)
+
+    def test_factory_rejects_unowned_driver_parents_before_normalizing_modes(self):
+        driver = self.root / update.DRIVER
+        driver.chmod(0o664)
+        original_lstat = Path.lstat
+        unowned_parent = driver.parent.resolve()
+        def unowned(path):
+            info = original_lstat(path)
+            return SimpleNamespace(st_uid=1000 if path == unowned_parent else info.st_uid,
+                                   st_gid=info.st_gid, st_mode=info.st_mode)
+        with patch.object(Path, 'lstat', unowned):
+            with self.assertRaisesRegex(ValueError, 'metadata'):
+                assemble.stage_x5_release(self.root, wifi_module=self.module, wifi_target=self.manifest)
+        self.assertEqual(driver.stat().st_mode & 0o777, 0o664)
+        self.assertFalse((self.root / update.RELEASE).exists())
+
+    def test_busy_factory_lock_does_not_normalize_driver_modes(self):
+        assemble.stage_x5_release(self.root, wifi_module=self.module, wifi_target=self.manifest)
+        driver = self.root / update.DRIVER
+        driver.chmod(0o664)
+        install = update.Installation(self.root, factory_release.CURRENT_HELPER.read_bytes(), self.patched,
+                                      driver_baseline=self.target.base_driver_sha256)
+        with install.locked():
+            with self.assertRaises(BlockingIOError):
+                assemble.stage_x5_release(self.root, wifi_module=self.module, wifi_target=self.manifest)
+        self.assertEqual(driver.stat().st_mode & 0o777, 0o664)
+
+    def test_changed_driver_at_lock_entry_is_rejected_before_mode_or_marker_changes(self):
+        driver = self.root / update.DRIVER
+        driver.chmod(0o664)
+        locked = update.Installation.locked
+        @contextmanager
+        def replace_before_yield(installation):
+            with locked(installation):
+                driver.write_bytes(b'unreviewed concurrent replacement')
+                yield
+        with patch.object(update.Installation, 'locked', replace_before_yield):
+            with self.assertRaisesRegex(ValueError, 'module'):
+                assemble.stage_x5_release(self.root, wifi_module=self.module, wifi_target=self.manifest)
+        self.assertEqual(driver.stat().st_mode & 0o777, 0o664)
+        self.assertFalse((self.root / update.RELEASE).exists())
+
+    def test_v032_does_not_normalize_a_driver_without_an_explicit_trusted_target(self):
+        driver = self.root / update.DRIVER
+        driver.chmod(0o664)
+        driver.parent.chmod(0o775)
+        assemble.stage_x5_release(self.root, 'v0.3.2')
+        self.assertEqual(driver.stat().st_mode & 0o777, 0o664)
+        self.assertEqual(driver.parent.stat().st_mode & 0o777, 0o775)
 
 
 if __name__ == '__main__':

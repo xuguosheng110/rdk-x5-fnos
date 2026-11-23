@@ -47,6 +47,30 @@ def prepare_parent(root, relative, mode=0o755):
         os.chown(path, 0, 0)
 
 
+
+def normalize_reviewed_driver_metadata(root):
+    """Normalize root-owned build artifacts only inside the offline image."""
+    driver = _destination(root, update.DRIVER)
+    changes = []
+    for path in (driver, *driver.parents):
+        if path == root:
+            break
+        info = path.lstat()
+        mode = stat.S_IMODE(info.st_mode)
+        is_driver = path == driver
+        expected_type = stat.S_ISREG if is_driver else stat.S_ISDIR
+        allowed = (0o644, 0o664) if is_driver else (0o755, 0o775)
+        if info.st_uid or info.st_gid or not expected_type(info.st_mode) or mode not in allowed:
+            raise ValueError('Unrecognized factory driver metadata: ' + str(path))
+        wanted = 0o644 if is_driver else 0o755
+        if mode != wanted:
+            changes.append((path, wanted))
+    # Validate the whole chain before changing any mode. The caller holds the
+    # update lock and already matched both the kernel and driver content hashes.
+    for path, mode in changes:
+        path.chmod(mode)
+
+
 def stage(root, release, wifi_module, wifi_target, write_text):
     root = root.resolve()
     if root == Path('/'):
@@ -69,6 +93,10 @@ def stage(root, release, wifi_module, wifi_target, write_text):
                                   driver_baseline=target.base_driver_sha256 if target else update.sha256(driver))
     prepare_parent(root, update.STATE / 'lock', mode=0o700)
     with install.locked():
+        if target:
+            if validated_inputs(root, wifi_module, wifi_target) != target:
+                raise ValueError('Factory Wi-Fi target changed while acquiring the update lock')
+            normalize_reviewed_driver_metadata(root)
         # Validate recovery state while holding the same lock used by apply and
         # rollback. A competing factory invocation must never rewrite a marker.
         for entry in install.files:
