@@ -1,0 +1,42 @@
+--- a/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_cmds.c
++++ b/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_cmds.c
+@@ -133,30 +133,20 @@
+ 	struct aic_usb_dev *usbdev = container_of(cmd_mgr, struct aic_usb_dev, cmd_mgr);
+ #endif
+ 	bool defer_push = false;
+-	u8_l empty = 0;
+ 
+ 	//RWNX_DBG(RWNX_FN_ENTRY_STR);
+ #ifdef CREATE_TRACE_POINTS
+ 	trace_msg_send(cmd->id);
+ #endif
+-	if(cmd->e2a_msg != NULL) {
+-		do {
+-			if(cmd_mgr->state == RWNX_CMD_MGR_STATE_CRASHED)
+-				break;
+-			spin_lock_bh(&cmd_mgr->lock);
+-			empty = list_empty(&cmd_mgr->cmds);
+-			if(!empty) {
+-				spin_unlock_bh(&cmd_mgr->lock);
+-				if(in_softirq()) {
+-					printk("in_softirq:check cmdqueue empty\n");
+-					mdelay(10);
+-				} else {
+-					printk("check cmdqueue empty\n");
+-					msleep(50);
+-				}
+-			}
+-		} while(!empty);//wait for cmd queue empty
+-	} else {
++	/* Keep the lock held for the queue-state check, including on timeout. */
++	spin_lock_bh(&cmd_mgr->lock);
++	while (cmd->e2a_msg && cmd_mgr->state != RWNX_CMD_MGR_STATE_CRASHED &&
++	       !list_empty(&cmd_mgr->cmds)) {
++		spin_unlock_bh(&cmd_mgr->lock);
++		if (in_softirq())
++			mdelay(10);
++		else
++			msleep(50);
+ 		spin_lock_bh(&cmd_mgr->lock);
+ 	}
+ 

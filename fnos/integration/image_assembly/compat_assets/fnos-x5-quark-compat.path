@@ -1,0 +1,10 @@
+[Unit]
+Description=Watch for Quark and qBittorrent installation and upgrades
+
+[Path]
+PathChanged=/var/apps/quark/cmd/main
+PathChanged=/var/apps/qBittorrent/cmd/service-setup
+Unit=fnos-x5-quark-compat.service
+
+[Install]
+WantedBy=multi-user.target

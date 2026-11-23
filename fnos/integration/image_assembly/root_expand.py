@@ -6,6 +6,7 @@ import re
 import subprocess
 
 
+MAX_ROOT_SECTORS = 16 * 1024**3 // 512
 SCRIPT = Path('usr/lib/fnos-x5/root_expand.py')
 UNIT = Path('etc/systemd/system/fnos-x5-root-expand.service')
 ENABLED = UNIT.parent / 'multi-user.target.wants' / UNIT.name
@@ -49,7 +50,8 @@ def target_size(layout, root, sectors):
     end = min(sectors, 2**32) // 2048 * 2048
     if not 0 < system['size'] <= sectors - system['start']:
         raise ValueError('system partition lies outside its SD card')
-    return max(system['size'], end - system['start'])
+    available = end - system['start']
+    return max(system['size'], min(available, MAX_ROOT_SECTORS))
 
 
 def expand():

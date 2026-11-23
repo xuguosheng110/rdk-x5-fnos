@@ -1,0 +1,17 @@
+[connection]
+id=RDK X5 Type-C direct
+uuid=d9a2afe4-d94f-4d37-b3e1-6df70779a435
+type=ethernet
+autoconnect=true
+autoconnect-priority=100
+
+[match]
+interface-name=x5usb*;
+
+[ipv4]
+method=manual
+address1=192.168.128.10/24
+never-default=true
+
+[ipv6]
+method=disabled

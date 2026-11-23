@@ -1,0 +1,12 @@
+[Unit]
+Description=RDK X5 Type-C USB Ethernet
+BindsTo=sys-subsystem-udc-devices-35300000.usb.device
+Requires=sys-kernel-config.mount
+After=sys-subsystem-udc-devices-35300000.usb.device sys-kernel-config.mount
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/lib/fnos-x5/fnos-x5-usb-direct start
+# Clean up even if the controller disappears during ExecStart.
+ExecStopPost=/usr/lib/fnos-x5/fnos-x5-usb-direct stop

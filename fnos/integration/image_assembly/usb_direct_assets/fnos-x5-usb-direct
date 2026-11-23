@@ -1,0 +1,69 @@
+#!/bin/sh
+set -eu
+
+udc=35300000.usb
+gadget=/sys/kernel/config/usb_gadget/fnos-x5-direct
+config=$gadget/configs/c.1
+function=$gadget/functions/rndis.usb0
+
+stop() {
+    [ -d "$gadget" ] || return 0
+    if [ -n "$(cat "$gadget/UDC")" ]; then
+        printf '\n' > "$gadget/UDC"
+    fi
+    rm -f "$gadget/os_desc/c.1" "$config/rndis.usb0"
+    for directory in "$function" "$config" "$gadget/strings/0x409" "$gadget"; do
+        if [ -d "$directory" ]; then
+            rmdir "$directory"
+        fi
+    done
+}
+
+case ${1:-} in
+    stop) stop; exit ;;
+    start) ;;
+    *) exit 2 ;;
+esac
+
+modprobe libcomposite
+# The UDC add event can precede registration of its bindable gadget device.
+controller=/sys/class/udc/$udc/gadget
+attempt=0
+while [ ! -e "$controller" ] && [ "$attempt" -lt 30 ]; do
+    sleep 0.1
+    attempt=$((attempt + 1))
+done
+[ -e "$controller" ] || {
+    echo "RDK X5 Type-C controller $udc did not finish registering" >&2
+    exit 1
+}
+
+# Use the same VID/PID and Windows OS descriptors as the RDK OS RNDIS-only profile.
+# Keep the USB identity and both local MACs stable across unplug and reboot.
+machine_id=$(cat /etc/machine-id)
+[ -n "$machine_id" ]
+identity=$(printf '%s' "$machine_id:fnos-x5-usb-direct" | sha256sum)
+identity=${identity%% *}
+mac_tail=$(printf '%.10s' "$identity" | sed 's/../&:/g;s/:$//')
+
+mkdir "$gadget"
+mkdir "$gadget/strings/0x409" "$config" "$function"
+printf '0x0525\n' > "$gadget/idVendor"
+printf '0xa4a2\n' > "$gadget/idProduct"
+printf '0x0100\n' > "$gadget/bcdDevice"
+printf '0xef\n' > "$gadget/bDeviceClass"
+printf '0x02\n' > "$gadget/bDeviceSubClass"
+printf '0x01\n' > "$gadget/bDeviceProtocol"
+printf '%.16s\n' "$identity" > "$gadget/strings/0x409/serialnumber"
+printf 'RDK X5 fnOS USB Ethernet\n' > "$gadget/strings/0x409/product"
+printf 'x5usb%%d\n' > "$function/ifname"
+printf '02:%s\n' "$mac_tail" > "$function/dev_addr"
+printf '06:%s\n' "$mac_tail" > "$function/host_addr"
+printf '1\n' > "$gadget/os_desc/use"
+printf '0xcd\n' > "$gadget/os_desc/b_vendor_code"
+printf 'MSFT100\n' > "$gadget/os_desc/qw_sign"
+printf 'RNDIS\n' > "$function/os_desc/interface.rndis/compatible_id"
+printf '5162001\n' > "$function/os_desc/interface.rndis/sub_compatible_id"
+ln -s "$function" "$config/rndis.usb0"
+ln -s "$config" "$gadget/os_desc/c.1"
+printf '%s\n' "$udc" > "$gadget/UDC"

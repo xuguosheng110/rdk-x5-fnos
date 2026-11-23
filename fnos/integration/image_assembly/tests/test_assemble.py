@@ -15,6 +15,7 @@ sys.path.insert(0, str(ROOT))
 from fnos.integration.image_assembly.mbr import build_mbr, parse_mbr  # noqa: E402
 from fnos.integration.image_assembly.assemble import adapt_boot_cmd, harden_boot_cmd, validate_product_kernel, PRODUCT_KERNEL_OPTIONS  # noqa: E402
 from fnos.integration.image_assembly.assemble import copy_sparse_partition, MIB
+from fnos.integration.image_assembly import assemble
 
 
 def base_mbr() -> bytes:
@@ -36,6 +37,15 @@ class BootCmdTests(unittest.TestCase):
                 validate_product_kernel(config)
             config.write_text('\n'.join(options + ['CONFIG_FHANDLE=y', '']))
             self.assertEqual(validate_product_kernel(config)['CONFIG_FHANDLE'], 'y')
+
+    def test_product_kernel_without_rndis_is_rejected_before_assembly(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / 'config'
+            content = '\n'.join(name + '=y' for name in PRODUCT_KERNEL_OPTIONS
+                                if name != 'CONFIG_USB_CONFIGFS_RNDIS')
+            config.write_text(content + '\n# CONFIG_USB_CONFIGFS_RNDIS is not set\n')
+            with self.assertRaisesRegex(ValueError, 'CONFIG_USB_CONFIGFS_RNDIS'):
+                validate_product_kernel(config)
 
     def test_native_mdadm_llbitmap_requirement_is_rejected_before_assembly(self):
         # New-board native Basic creation returned EINVAL writing llbitmap.
@@ -97,6 +107,21 @@ class BootCmdTests(unittest.TestCase):
         self.assertIn('ERROR: cannot load kernel', out)
         self.assertNotIn("then :", out)
         self.assertNotIn("if :", out)
+
+
+class UsbDirectTests(unittest.TestCase):
+    def test_image_contains_the_usb_direct_connection_and_rejects_missing_profile(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with patch.object(assemble, 'run'):
+                assemble.stage_usb_direct(root)
+            assemble.verify_usb_direct(root)
+
+            profile = root / 'etc/NetworkManager/system-connections/fnos-x5-usb-direct.nmconnection'
+            self.assertEqual(profile.stat().st_mode & 0o777, 0o600)
+            profile.unlink()
+            with self.assertRaisesRegex(ValueError, 'fnos-x5-usb-direct.nmconnection'):
+                assemble.verify_usb_direct(root)
 
 
 class MbrTests(unittest.TestCase):

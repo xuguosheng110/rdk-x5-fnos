@@ -1,0 +1,2 @@
+# NetworkManager's 85-nm-unmanaged.rules ignores USB gadgets by default.
+SUBSYSTEM=="net", ENV{DEVTYPE}=="gadget", KERNEL=="x5usb[0-9]*", ENV{NM_UNMANAGED}="0"

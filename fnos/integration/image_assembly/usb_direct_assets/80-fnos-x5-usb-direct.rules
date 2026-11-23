@@ -1,0 +1,1 @@
+SUBSYSTEM=="udc", KERNEL=="35300000.usb", TAG+="systemd", ENV{SYSTEMD_ALIAS}+="/sys/subsystem/udc/devices/%k", ENV{SYSTEMD_WANTS}+="fnos-x5-usb-direct.service"

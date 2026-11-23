@@ -1,0 +1,22 @@
+--- a/drivers/net/wireless/aic8800/aic8800_fdrv/aicwf_sdio.c
++++ b/drivers/net/wireless/aic8800/aic8800_fdrv/aicwf_sdio.c
+@@ -3205,14 +3205,13 @@
+         return ret;
+     }
+     msleep(1);
+-#if 1//SDIO CLOCK SETTING
+-	if ((feature.sdio_clock > 0) && (host->ios.timing != MMC_TIMING_UHS_DDR50)) {
++#endif
++	/* Honor the chip limit without raising a slower host's negotiated clock. */
++	if (feature.sdio_clock > 0 && host->ios.clock > feature.sdio_clock &&
++	    host->ios.timing != MMC_TIMING_UHS_DDR50) {
+ 		host->ios.clock = feature.sdio_clock;
+ 		host->ops->set_ios(host, &host->ios);
+-		AICWFDBG(LOGINFO, "Set SDIO Clock %d MHz\n", host->ios.clock/1000000);
+-	}
+-#endif
+-#endif
++	}
+ 	sdio_release_host(sdiodev->func);
+ 
+ 	//1: no byte mode

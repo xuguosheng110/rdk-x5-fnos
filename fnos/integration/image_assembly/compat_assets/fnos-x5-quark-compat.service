@@ -1,0 +1,9 @@
+[Unit]
+Description=Apply private log directories to supported application launchers
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/lib/fnos-x5/quark_log_compat.py
+
+[Install]
+WantedBy=multi-user.target
