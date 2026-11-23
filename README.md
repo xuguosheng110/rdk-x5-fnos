@@ -8,18 +8,27 @@
 </p>
 
 <p align="center">
-  <img alt="版本 v0.3.2" src="https://img.shields.io/badge/release-v0.3.2-0891b2?style=flat-square">
+  <img alt="v0.3.3 集成候选" src="https://img.shields.io/badge/candidate-v0.3.3-f59e0b?style=flat-square">
   <img alt="平台 RDK X5 ARM64" src="https://img.shields.io/badge/platform-RDK%20X5%20ARM64-263554?style=flat-square">
   <img alt="Linux 6.18.0" src="https://img.shields.io/badge/Linux-6.18.0-6d4aff?style=flat-square">
 </p>
+
+<p align="center">
+  <a href="#完整版安装">下载安装</a> ·
+  <a href="#加速模块">相册与影视加速</a> ·
+  <a href="#todo">进展与计划</a> ·
+  <a href="https://github.com/xuguosheng110/rdk-x5-fnos/issues">问题反馈</a>
+</p>
+
+> **当前为集成候选，尚未发布。** 本轮纳入 Type-C 闪连、TF 单卡存储、Wi-Fi 修复与可回滚更新；完整镜像及匹配驱动仍需构建和真板验收。下载以 [Release 页面](https://github.com/xuguosheng110/rdk-x5-fnos/releases) 中实际公开的文件为准。
 
 ## v0.3.3 原地更新
 
 已安装本文 v0.3.2 镜像的 RDK X5 可以通过 SSH 更新到 v0.3.3，并使用同一个包回滚。更新保留 TF 卡数据卷、飞牛账号和 Home Assistant 配置。构建、校验和使用方法见 [原地更新说明](fnos/integration/in_place_update/README.md)。
 
-## v0.3.2 快速开始
+## 完整版安装
 
-1. 使用完整镜像 `rdk-x5-fnos-v0.3.2.img`，按容量确认目标 TF 卡后整盘写入。
+1. 下载对应版本的完整系统 `.img` 或 `.img.xz`，先核对 SHA-256；`.xz` 解压后按容量确认目标 TF 卡，再整盘写入。GitHub 分卷需先按该 Release 的说明合并；源码 ZIP 不能直接烧录。
 2. 将 TF 卡装入 X5 后上电。首次启动会将系统分区扩展到最多 16 GiB，剩余容量留给存储空间管理。已有较大系统分区不会被缩小。
 3. 将电脑接到 Type-C 闪连口，给 Windows 的 RNDIS 网卡配置 `192.168.128.1/24`，打开 `http://192.168.128.10:5666/`。
 4. **完成飞牛原生首次设置。** 点击「开始 NAS 之旅」，由用户自行填写设备名、
@@ -75,6 +84,8 @@
 
 ## 加速模块
 
+完整镜像会在用户完成原生设置并选择可写数据卷后准备应用与加速。新账户在相册引导中选择备份位置并保留默认 AI 开关即可；原生上传后的识别在实测中约延迟 2 分钟启动。应用重启、新账户上传、BPU 实际调用和普通账户读写已在 r27 补测通过；新候选仍须分别验证。Wi-Fi 驱动和 CPU 策略随完整镜像部署，使用与该镜像绑定的更新包维护。
+
 配套模块可从飞牛网页「应用中心 → 手动安装」安装，格式为 ARM64 `.fpk`，构建版本
 `0.3.5`，系统版本 `0.3.0`。它提供相册人脸检测/关键点/FaceID128 的
 worker、模型和原生入口适配，影视 VPU 编解码适配库、启动器和 drop-in，以及
@@ -122,11 +133,18 @@ r24 和 r25 均实测 117 GB USB 盘在原生网页新建 Basic/Btrfs，热重�
 ## TODO
 
 - [x] 在集成权限补丁的新镜像（r27）上复验团队共享原生创建与 SMB 自动导出。
-- [ ] 在 r27 上复验新上传照片的 BPU 人脸自动索引。
+- [x] 在 r27 上复验原生新照片自动识别、相册重启恢复、新账户默认 AI 和 SMB 读写。
+- [x] 统一完整镜像与原地更新的 Wi-Fi/CPU 部署及回滚基线，新增相关软件回归。
+- [ ] 构建匹配内核及 Wi-Fi 模块，完成新候选的 TF 单卡、Type-C、BPU/VPU 和升级/回滚真板验收。
 - [ ] 排查原生删除旧卷时文件监控占用问题。
 - [ ] 补充更多 USB 控制器的长期读写测试。
 - [ ] 等应用中心提供新的兼容版本后，复测原生相册和影视跨版本升级。
-- [ ] 核实专有组件分发授权，公开资产使用对应源码与校验清单。
+- [x] 双方再分发许可已由维护者确认；保留各组件原有许可与归属。
+- [ ] 完整镜像、模块、源码和校验文件同步到公开 Release 与百度网盘，并核对远端下载。
+
+### 社区贡献
+
+感谢 [maxma615](https://github.com/maxma615) 提交 [#2](https://github.com/xuguosheng110/rdk-x5-fnos/pull/2) 的 Type-C、单卡存储与应用兼容改进，以及 [#3](https://github.com/xuguosheng110/rdk-x5-fnos/pull/3) 的 Wi-Fi 修复和可回滚更新。本轮集成分支保留这些提交及作者信息。[#1](https://github.com/xuguosheng110/rdk-x5-fnos/pull/1) 的导航和移动端阅读思路也用于本页，封面继续使用 X5 实物与飞牛 Logo。
 
 ## 源码、协议与分发范围
 

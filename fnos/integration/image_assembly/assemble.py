@@ -40,7 +40,7 @@ from .native_media import stage_native_media, verify_native_media
 from .native_photos import stage_native_photos, verify_native_photos
 from .native_semantic768 import stage_native_semantic768, verify_native_semantic768
 from .product_inputs import stage_product_inputs, verify_product_inputs
-from . import root_expand
+from . import root_expand, factory_release
 
 MIB = 1024 * 1024
 GIB = 1024 * 1024 * 1024
@@ -154,11 +154,9 @@ def write_text(path: Path, text: str, mode: int = 0o644) -> None:
     run(["chown", "0:0", str(path)])
 
 
-def stage_x5_release(root: Path) -> None:
+def stage_x5_release(root: Path, release='v0.3.3', *, wifi_module=None, wifi_target=None) -> dict:
     here = Path(__file__).parent
-    write_text(root / 'etc/fnos-x5/release', 'v0.3.3\n')
-    write_text(root / 'usr/lib/fnos-x5/quark_log_compat.py',
-               (here / 'quark_log_compat.py').read_text())
+    report = factory_release.stage(root, release, wifi_module, wifi_target, write_text)
     for suffix in ('service', 'path'):
         name = f'fnos-x5-quark-compat.{suffix}'
         write_text(root / 'etc/systemd/system' / name, (here / 'compat_assets' / name).read_text())
@@ -166,6 +164,7 @@ def stage_x5_release(root: Path) -> None:
         link.parent.mkdir(parents=True, exist_ok=True)
         if not link.is_symlink() or os.readlink(link) != '../' + name:
             link.symlink_to('../' + name)
+    return report
 
 
 def stage_usb_direct(root: Path) -> None:
@@ -816,7 +815,7 @@ def parse_reserved_memory(dtb: Path) -> list[dict]:
     return out
 
 
-def verify_final(image: Path, work: Path, expected_p1_sha256: str | None = None, expected_p2_sha256: str | None = None, expected_runtime: dict | None = None, expected_home_storage: dict | None = None, expected_native_media: dict | None = None, expected_native_photos: dict | None = None, expected_product_inputs: dict | None = None, expected_native_semantic768: dict | None = None, *, expect_usb_direct: bool = False) -> dict:
+def verify_final(image: Path, work: Path, expected_p1_sha256: str | None = None, expected_p2_sha256: str | None = None, expected_runtime: dict | None = None, expected_home_storage: dict | None = None, expected_native_media: dict | None = None, expected_native_photos: dict | None = None, expected_product_inputs: dict | None = None, expected_native_semantic768: dict | None = None, *, expect_usb_direct: bool = False, expected_release: str | None = None, wifi_target: Path | None = None) -> dict:
     """All critical checks read the final image, not staging.
 
     The p2 filesystem is mounted read-only through private-image fuse2fs at the
@@ -1059,6 +1058,10 @@ def verify_final(image: Path, work: Path, expected_p1_sha256: str | None = None,
             checks['usb_direct_kernel_requirements'] = validate_kernel_options(
                 mount / 'boot/config-6.18.0', USB_DIRECT_KERNEL_OPTIONS, 'USB direct')
             critical.extend(('usb_direct_files', 'usb_direct_kernel_requirements'))
+        if expected_release is not None:
+            checks['factory_release'] = factory_release.verify(mount, expected_release, wifi_target)
+            checks['factory_release_verified'] = True
+            critical.append('factory_release_verified')
         checks["critical"] = critical
         checks["all_pass"] = all(bool(checks[k]) for k in critical)
         checks["os"] = {"os_release": osrel, "trim_version_file": trim_ver, "trim_package": {"version": trim_pkg_version, "status": trim_status}}
@@ -1084,7 +1087,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--rootfs-size", default="12G")
     ap.add_argument("--rootfs-uuid", default=None)
     ap.add_argument("--source-image-sha256", required=True)
-    ap.add_argument("--release", default="v0.3.3")
+    ap.add_argument("--release", choices=('v0.3.2', 'v0.3.3'), default="v0.3.3")
+    ap.add_argument('--wifi-module', type=Path, help='patched AIC8800 module bound to --wifi-target')
+    ap.add_argument('--wifi-target', type=Path, help='reviewed kernel/original/patched Wi-Fi module digests')
     ap.add_argument("--runtime-sources", type=Path, help="pinned X5 runtime repositories; embed Wi-Fi firmware and codec/BPU libraries")
     ap.add_argument("--bpu-module", type=Path, help="exact reviewed legacy 6.18.0 BPU module; requires --runtime-sources")
     ap.add_argument("--home-acl-library", type=Path, help="embed household shared-data policy for native storage and application services")
@@ -1098,6 +1103,10 @@ def main(argv: list[str] | None = None) -> int:
                     help="payload policy shared with the standalone FPK; runtime is the release default")
     ap.add_argument("--skip-restore", action="store_true")
     args = ap.parse_args(argv)
+    if args.release == 'v0.3.3' and (args.wifi_module is None or args.wifi_target is None):
+        ap.error('v0.3.3 requires --wifi-module and --wifi-target; no unpatched image will be labeled v0.3.3')
+    if args.release == 'v0.3.2' and (args.wifi_module is not None or args.wifi_target is not None):
+        ap.error('Wi-Fi hotfix inputs require --release v0.3.3')
     if args.bpu_module and not args.runtime_sources:
         ap.error("--bpu-module requires --runtime-sources")
     if args.native_media_library and not args.runtime_sources:
@@ -1131,7 +1140,8 @@ def main(argv: list[str] | None = None) -> int:
     log(f"rootfs UUID: {fs_uuid}")
     prep = prepare_rootfs(root, args.x5_artifacts, args.boot_cmd, args.source_image_sha256, fs_uuid)
     stage_usb_direct(root)
-    stage_x5_release(root)
+    prep['factory_release'] = stage_x5_release(root, args.release,
+                                             wifi_module=args.wifi_module, wifi_target=args.wifi_target)
     if kernel_requirements:
         prep['product_kernel_requirements'] = kernel_requirements
     if args.runtime_sources:
@@ -1194,7 +1204,7 @@ def main(argv: list[str] | None = None) -> int:
     p1info = build_fat(p1)
     outinfo = assemble_image(args.mbr, p1, p2, args.output)
     # A4: every critical check reads the final image/p2, not staging.
-    checks = verify_final(args.output, args.work, p1info["sha256"], p2info["sha256"], prep.get("platform_runtime"), prep.get("home_storage"), prep.get("native_media"), prep.get("native_photos"), prep.get("product_inputs"), prep.get('native_semantic768'), expect_usb_direct=True)
+    checks = verify_final(args.output, args.work, p1info["sha256"], p2info["sha256"], prep.get("platform_runtime"), prep.get("home_storage"), prep.get("native_media"), prep.get("native_photos"), prep.get("product_inputs"), prep.get('native_semantic768'), expect_usb_direct=True, expected_release=args.release, wifi_target=args.wifi_target)
     manifest = {
         "schema": "fnos-x5-assembly/v2",
         "release": args.release,

@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 import fcntl
 import hashlib
+import json
 import os
 from pathlib import Path
 import re
@@ -51,6 +52,29 @@ WantedBy=multi-user.target
 
 def sha256(contents):
     return hashlib.sha256(contents).hexdigest()
+
+
+@dataclass(frozen=True)
+class WifiTarget:
+    """Bind the original and replacement module to one exact kernel build."""
+    kernel_image_sha256: str
+    base_driver_sha256: str
+    driver_sha256: str
+
+    def __post_init__(self):
+        for value in (self.kernel_image_sha256, self.base_driver_sha256, self.driver_sha256):
+            if not isinstance(value, str) or not re.fullmatch(r'[0-9a-f]{64}', value):
+                raise ValueError('Invalid Wi-Fi target digest')
+
+    @classmethod
+    def from_json(cls, contents):
+        data = json.loads(contents)
+        if not isinstance(data, dict) or data.pop('schema', None) != 'fnos-x5-wifi-target/v1':
+            raise ValueError('Unrecognized Wi-Fi target manifest')
+        return cls(**data)
+
+    def to_json(self):
+        return json.dumps({'schema': 'fnos-x5-wifi-target/v1', **self.__dict__}, sort_keys=True) + '\n'
 
 
 def trusted_path(path, mode):
@@ -105,7 +129,7 @@ class ManagedFile:
 
 
 class Installation:
-    def __init__(self, root, helper_payload, driver_payload):
+    def __init__(self, root, helper_payload, driver_payload, *, driver_baseline=None):
         self.root = root
         self.release = root / RELEASE
         self.state = root / STATE
@@ -113,7 +137,7 @@ class Installation:
         self.driver_backup = self.state / 'original-aic8800_fdrv.ko'
         self.files = (
             ManagedFile(root / HELPER, self.backup, BASE_DIGEST, helper_payload),
-            ManagedFile(root / DRIVER, self.driver_backup, BASE_DRIVER_DIGEST, driver_payload,
+            ManagedFile(root / DRIVER, self.driver_backup, driver_baseline or BASE_DRIVER_DIGEST, driver_payload,
                         root / LEGACY_DRIVER_BACKUP),
         )
 
@@ -243,14 +267,15 @@ class Installation:
             self.set_release(BASE)
 
 
-def check_board():
+def check_board(target=None):
     model = Path('/proc/device-tree/model').read_bytes().rstrip(b'\0')
     root_volume = subprocess.check_output(['findmnt', '-nro', 'SOURCE,FSTYPE', '/'], text=True).strip()
     trim = subprocess.check_output(['dpkg-query', '-W', '-f=${Version}', 'trim'], text=True)
     if (not model.startswith(b'D-Robotics RDK X5') or os.uname().release != '6.18.0'
             or not re.fullmatch(r'/dev/mmcblk[0-9]+p2 ext4', root_volume) or trim != '1.2.0701'):
         raise ValueError('Unsupported board, system partition, kernel or fnOS version')
-    if sha256(Path('/boot/Image').read_bytes()) != KERNEL_IMAGE_DIGEST:
+    expected_kernel = target.kernel_image_sha256 if target else KERNEL_IMAGE_DIGEST
+    if sha256(Path('/boot/Image').read_bytes()) != expected_kernel:
         raise ValueError('The kernel Image does not match the supported Wi-Fi module')
 
 
@@ -261,13 +286,15 @@ def main():
     if os.geteuid():
         parser.exit(1, 'Run the package with sudo.\n')
     try:
-        check_board()
         with zipfile.ZipFile(sys.argv[0]) as archive:
             payload = archive.read('quark_log_compat.py')
             driver = archive.read('aic8800_fdrv.ko')
-        if sha256(driver) != DRIVER_DIGEST:
+            target = WifiTarget.from_json(archive.read('wifi-target.json')) if 'wifi-target.json' in archive.namelist() else None
+        check_board(target)
+        if sha256(driver) != (target.driver_sha256 if target else DRIVER_DIGEST):
             raise ValueError('Wi-Fi module in the update package failed checksum validation')
-        install = Installation(Path('/'), payload, driver)
+        install = Installation(Path('/'), payload, driver,
+                               driver_baseline=target.base_driver_sha256 if target else None)
         with install.locked():
             if args.action == 'apply':
                 install.apply()
@@ -276,5 +303,5 @@ def main():
             print(install.status())
             if args.action != 'status':
                 print('Reboot to load the Wi-Fi driver and CPU policy from disk.', file=sys.stderr)
-    except (OSError, ValueError, KeyError, subprocess.CalledProcessError, zipfile.BadZipFile) as error:
+    except (OSError, ValueError, TypeError, KeyError, subprocess.CalledProcessError, zipfile.BadZipFile) as error:
         parser.exit(1, f'Update stopped: {error}\n')

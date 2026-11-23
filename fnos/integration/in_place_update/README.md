@@ -32,3 +32,26 @@ cat /sys/devices/system/cpu/cpufreq/policy*/scaling_governor
 sudo python3 /var/lib/fnos-x5/rdk-x5-fnos-v0.3.2-to-v0.3.3-performance.pyz rollback
 sudo reboot
 ```
+
+## 完整镜像与其他内核构建
+
+v0.3.3 完整镜像也通过同一个更新事务部署：原版应用兼容脚本、原版 Wi-Fi
+模块先保存为回滚基线，再安装修复模块、禁用 Wi-Fi 省电、启用 CPU 性能服务，
+最后写入版本标记。成品镜像验证会检查这组文件、性能配置和回滚基线；缺少
+修复模块或对应内核校验清单时，组装器会拒绝产出标记为 v0.3.3 的镜像。
+普通用户直接安装完整镜像，无需通过 SSH 补装这些配置。
+
+不同内核构建即使都显示 `6.18.0`，也不能混用模块。原始 PR 的更新目标继续
+保留；为另一套已审核构建制作更新包时，应将相应的 `wifi-target.json` 同时
+交给镜像组装器和更新包构建器：
+
+```sh
+python3 -m fnos.integration.in_place_update.build update.pyz \
+  --wifi-module aic8800_fdrv.ko --wifi-target wifi-target.json
+```
+
+该清单使用 `fnos-x5-wifi-target/v1` 格式，包含 `kernel_image_sha256`、
+`base_driver_sha256` 和 `driver_sha256`，分别绑定精确内核、原版模块及修复模块。
+这些摘要必须来自同一轮受控构建。更新包内嵌该清单，在写文件前核对本机内核，
+不会因为内核版本字符串相同而覆盖不匹配的驱动。完整镜像和相应更新包必须
+使用同一清单。未提供该参数时，构建器仍只接受本文原始 PR 的已审核模块。

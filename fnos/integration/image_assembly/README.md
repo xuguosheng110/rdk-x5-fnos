@@ -3,6 +3,15 @@
 This package builds a **candidate** whole-disk image only. It does not mount a
 host block device, does not use sudo, and does not write physical media.
 
+For `--release v0.3.3` (the default), also supply `--wifi-module` and
+`--wifi-target`. The target JSON binds the exact kernel Image, original module
+and patched AIC8800 module by SHA-256. The input artifact tree must contain the
+original same-build module. Assembly uses the in-place updater transaction to
+save rollback baselines and install the hotfix plus Wi-Fi/CPU policies; the final
+image verifier checks those files again from the image. See the
+[target format](../in_place_update/README.md#完整镜像与其他内核构建).
+`--release v0.3.2` retains its reviewed original helper and module.
+
 ## Current contract
 
 - manifest schema: `fnos-x5-assembly/v2`
