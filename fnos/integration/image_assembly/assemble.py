@@ -845,7 +845,9 @@ def verify_final(image: Path, work: Path, expected_p1_sha256: str | None = None,
         # fuse2fs fsyncs the image even for a read-only mount. A freshly
         # assembled multi-GiB image on the build server's USB HDD can take
         # several minutes to flush; do not abort that required durability step.
-        run([fuse2fs, "-o", f"ro,offset={P2_START_LBA * SEC}", str(image), str(mount)], timeout=900)
+        # Permit the unprivileged image builder to read root-only 0600/0700
+        # entries. fuse2fs still reports their stored uid/gid/mode for checks.
+        run([fuse2fs, "-o", f"ro,fakeroot,offset={P2_START_LBA * SEC}", str(image), str(mount)], timeout=900)
         mounted = True
         time.sleep(1)
         fstab = _read(mount / "etc/fstab")
