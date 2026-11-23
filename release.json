@@ -15,7 +15,9 @@
       "bytes": 2478653552,
       "sha256": "ea02e5b8b158aaf1fdee4ec22bfcee5d9bb6412ecd68199d8b2bf9ce874a76d0",
       "filename": "fnos-x5-v0.3.3-pr4-rc1.img.xz"
-    }
+    },
+    "parts": "parts.json",
+    "github_download": "merge-image.py reconstructs only this candidate image; FPK is a separate complete asset"
   },
   "linux": "6.18.0",
   "fnos_arm": "1.2.0701",

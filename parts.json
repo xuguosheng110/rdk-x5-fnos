@@ -1,58 +1,36 @@
 {
-  "release": "v0.3.1",
+  "release": "v0.3.3",
   "part_size": 536870912,
   "files": [
     {
-      "file": "rdk-x5-fnos-v0.3.1.img.xz",
-      "size": 2612850028,
-      "sha256": "59e6a7f8af809d2d8a2e692b384335843aa5227e0925b3ef3857adb853c15791",
+      "file": "fnos-x5-v0.3.3-pr4-rc1.img.xz",
+      "size": 2478653552,
+      "sha256": "ea02e5b8b158aaf1fdee4ec22bfcee5d9bb6412ecd68199d8b2bf9ce874a76d0",
       "parts": [
         {
-          "name": "rdk-x5-fnos-v0.3.1.img.xz.part01",
+          "name": "fnos-x5-v0.3.3-pr4-rc1.img.xz.part01",
           "size": 536870912,
-          "sha256": "e6c42673e28c719bb63570819443a45f1061535485f19cc51a2b6dacebc8e713"
+          "sha256": "23510f22828fb309a040cedba13b31dc64b33d2953b9b41a86d759007945beea"
         },
         {
-          "name": "rdk-x5-fnos-v0.3.1.img.xz.part02",
+          "name": "fnos-x5-v0.3.3-pr4-rc1.img.xz.part02",
           "size": 536870912,
-          "sha256": "3cf0068361a7848b040a7dffbad73e5d4f490241ccf83506693c12d8521d1f98"
+          "sha256": "fa8447c340f4788a52d4eca42c44109c620fb2f772640433ee16b0447df362dc"
         },
         {
-          "name": "rdk-x5-fnos-v0.3.1.img.xz.part03",
+          "name": "fnos-x5-v0.3.3-pr4-rc1.img.xz.part03",
           "size": 536870912,
-          "sha256": "452e5d3f91b2e297bc28dc0910bf38d8c6fd62e85e091142847ab4f48bba1228"
+          "sha256": "66b389f81cc57c03fd0306dfe8579e02ecc770114d5c89e9b0fdc3adfa08ce0d"
         },
         {
-          "name": "rdk-x5-fnos-v0.3.1.img.xz.part04",
+          "name": "fnos-x5-v0.3.3-pr4-rc1.img.xz.part04",
           "size": 536870912,
-          "sha256": "7e31b5e2da7576571a656222c1f22998fe32a8ab101296ea74648aed2e7df64c"
+          "sha256": "40adc2e2b6a382ce13018a97fb46fa7b8b7540684c7d6c1da12743c98205aa81"
         },
         {
-          "name": "rdk-x5-fnos-v0.3.1.img.xz.part05",
-          "size": 465366380,
-          "sha256": "5859ff2e1fa8310511b3ce022e4ada6e92efc937c0d8d72d1b09c275d03d6984"
-        }
-      ]
-    },
-    {
-      "file": "fnos-x5-accel-0.3.5-runtime.fpk",
-      "size": 1301594067,
-      "sha256": "da8fc1a064fcdea991d976fca4693bd48badd62ba9f6215845b1ab5a4b3bb2b3",
-      "parts": [
-        {
-          "name": "fnos-x5-accel-0.3.5-runtime.fpk.part01",
-          "size": 536870912,
-          "sha256": "2f06e218564fe18be83a5faecd4dea61465017ce2a8a6653b5ef28683197e342"
-        },
-        {
-          "name": "fnos-x5-accel-0.3.5-runtime.fpk.part02",
-          "size": 536870912,
-          "sha256": "a934f9f13c1a2ec193537164ea6c0692cfc2336d6dc64a530ec2ae2cc9eeb520"
-        },
-        {
-          "name": "fnos-x5-accel-0.3.5-runtime.fpk.part03",
-          "size": 227852243,
-          "sha256": "7f8e640ce28c06855bd30f8feb98fe884a4dac964e1aa124c5b2897b89581b08"
+          "name": "fnos-x5-v0.3.3-pr4-rc1.img.xz.part05",
+          "size": 331169904,
+          "sha256": "b95f136bf3be7ad6e5348508ffbc4ad0fede4585300156f999326a72cb02f716"
         }
       ]
     }
