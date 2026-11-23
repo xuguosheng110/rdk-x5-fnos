@@ -52,7 +52,7 @@
     "final_image_critical_checks_passed": 53,
     "final_image_checks_scope": "raw image file; not a physical card or boot result",
     "factory_wifi_cpu_and_rollback_baselines": "verified",
-    "new_candidate_board": "not_started"
+    "new_candidate_board": "passed; fresh setup, native TF creation, Wi-Fi UI/reconnect, Photos BPU, Media VPU, SMB, rollback/reapply and controlled cold boot; see acceptance_20261123"
   },
   "module": {
     "appname": "fnos-x5-accel",
